@@ -1,0 +1,10 @@
+# ACR OpsRoom
+
+> The Cryptographic, Byzantine-Fault-Tolerant War Room for Autonomous Enterprise AI. Beyond Salesforce Agentforce & Slack.
+
+- **Architecture:** Goal-Directed DAG Planning (Atlas 2.0) with M-of-N Quorum Consensus
+- **Safety:** 67% Byzantine Fault Tolerance, Ed25519 W3C DIDs, ToolHive Zero-Trust Sandboxing
+- **Surface:** Live Collaborative Dynamic Ops Canvas & Synthetic Multi-Agent Huddle Fabric
+- **License:** Apache-2.0
+- **Repo Index:** 21st canonical ecosystem repo in Agentic Chat Rooms (ACR)
+- **Port Standards:** Web Client :30447, REST/SSE Server :20447, Meta-MCP :20445, Master Daemon :20443

@@ -1,0 +1,27 @@
+# ACR OpsRoom - Full LLM Context & Architectural Specifications
+
+## Overview
+ACR OpsRoom is the 21st canonical ecosystem repository of Agentic Chat Rooms. It delivers an autonomous operations war room that supersedes Salesforce Agentforce and Slack AI by combining:
+1. Atlas 2.0 Goal-Directed DAG Planning
+2. Byzantine Fault Tolerant (BFT) Quorum Consensus
+3. ToolHive-Inspired Zero-Trust Process Sandboxing
+4. Live Collaborative Ops Canvases with Merkle Tree Integrity
+5. Synthetic Multi-Agent Huddles with Audio Equalizer Fabric
+6. Statistical Anomaly Detection & ML Routing (/ml-best-practices)
+
+## Mathematical Consensus Model
+An operational squad of n agents evaluates mitigation proposals. Each agent casts a signed ballot:
+- Approved if weighted approvals / (weighted approvals + weighted rejections) >= 0.67.
+- Minimum absolute headcount >= ceil(n / 2).
+- Zero unresolved Byzantine anomalies (tampered DID, corrupted confidence score, inverted rationale).
+- Critical mutations trigger Human-In-The-Loop (HITL) dual-consent gating.
+
+## Port Map
+- 30447: Web Application (Vite + React 19 + GSAP + Canvas Shader)
+- 20447: Backend REST & Server-Sent Events (SSE) Server
+- 20445: acr-meta-mcp Forward Proxy & Multi-Cipher Vault
+- 20443: acr-core Reference Daemon & NATS JetStream
+
+## Verification Discipline
+- Run `npm test` to execute the Node.js test suite across core and server packages.
+- Run `npm run build` to build TypeScript packages and Vite web bundle.

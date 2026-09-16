@@ -1,0 +1,68 @@
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { ByzantineConsensusEngine } from '../src/consensus.js';
+import { MLIncidentRouter } from '../src/ml-router.js';
+describe('ByzantineConsensusEngine', () => {
+    const squad = MLIncidentRouter.createDefaultSquad('squad-sre-core');
+    test('successfully approves plan when supermajority (>= 67%) agrees', () => {
+        const ballots = [
+            ByzantineConsensusEngine.signBallot('inc-1', squad.agents[0], 'approve', 0.95, 'Safe mitigation plan verified'),
+            ByzantineConsensusEngine.signBallot('inc-1', squad.agents[1], 'approve', 0.90, 'Telemetry matches failover threshold'),
+            ByzantineConsensusEngine.signBallot('inc-1', squad.agents[2], 'approve', 0.85, 'Zero-trust sandbox profile verified'),
+            ByzantineConsensusEngine.signBallot('inc-1', squad.agents[3], 'approve', 0.80, 'Schema consistency preserved'),
+            ByzantineConsensusEngine.signBallot('inc-1', squad.agents[4], 'reject', 0.70, 'Minor budget drift risk'),
+        ];
+        const result = ByzantineConsensusEngine.evaluateQuorum('inc-1', squad, ballots);
+        assert.equal(result.status, 'approved');
+        assert.equal(result.thresholdReached, true);
+        assert.ok(result.weightedApprovalRatio >= 0.67);
+        assert.equal(result.byzantineAnomaliesDetected, false);
+        assert.ok(result.merkleRootHash.length === 64);
+    });
+    test('rejects when quorum threshold fails to reach 67%', () => {
+        const ballots = [
+            ByzantineConsensusEngine.signBallot('inc-2', squad.agents[0], 'approve', 0.8, 'Safe plan'),
+            ByzantineConsensusEngine.signBallot('inc-2', squad.agents[1], 'reject', 0.9, 'Danger of data corruption'),
+            ByzantineConsensusEngine.signBallot('inc-2', squad.agents[2], 'reject', 0.95, 'Security posture violated'),
+            ByzantineConsensusEngine.signBallot('inc-2', squad.agents[3], 'reject', 0.85, 'WAL replication gap'),
+        ];
+        const result = ByzantineConsensusEngine.evaluateQuorum('inc-2', squad, ballots);
+        assert.notEqual(result.status, 'approved');
+        assert.equal(result.thresholdReached, false);
+    });
+    test('detects Byzantine ballot anomalies (tampered DID or negative confidence)', () => {
+        const validBallot = ByzantineConsensusEngine.signBallot('inc-3', squad.agents[0], 'approve', 0.9, 'Safe plan');
+        // Corrupted ballot with invalid confidence
+        const corruptedBallot = {
+            ...validBallot,
+            ballotId: 'ballot-corrupt',
+            confidence: -1.5,
+        };
+        const audit = ByzantineConsensusEngine.auditBallot(corruptedBallot, squad.agents[0]);
+        assert.equal(audit.isFlagged, true);
+        assert.equal(audit.reason, 'Invalid confidence bounds');
+    });
+    test('escalates to human commander when forceHumanGating or Byzantine fault is present', () => {
+        const ballots = [
+            ByzantineConsensusEngine.signBallot('inc-4', squad.agents[0], 'approve', 0.95, 'Safe plan'),
+            ByzantineConsensusEngine.signBallot('inc-4', squad.agents[1], 'approve', 0.90, 'Safe plan'),
+            // Injected malicious agent ballot
+            {
+                ballotId: 'ballot-malicious',
+                incidentId: 'inc-4',
+                agentId: squad.agents[2].id,
+                did: 'did:key:fakeSpoofedIdentityKey',
+                role: squad.agents[2].role,
+                decision: 'approve',
+                confidence: 0.99,
+                justification: 'All good',
+                timestamp: Date.now(),
+                signature: 'invalid-signature-hash',
+            }
+        ];
+        const result = ByzantineConsensusEngine.evaluateQuorum('inc-4', squad, ballots);
+        assert.equal(result.status, 'escalated_human');
+        assert.equal(result.byzantineAnomaliesDetected, true);
+    });
+});
+//# sourceMappingURL=consensus.test.js.map

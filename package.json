@@ -1,0 +1,33 @@
+{
+  "name": "@acr-js/opsroom-workspace",
+  "version": "1.0.0",
+  "description": "ACR OpsRoom: Autonomous War Room, Byzantine Deliberation Engine & Supercharged Agentforce Platform",
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "packages/server",
+    "packages/web"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@acr-js/opsroom-core && npm run build --workspace=@acr-js/opsroom-server && npm run build --workspace=@acr-js/opsroom-web",
+    "test": "node --test packages/core/dist/test/*.test.js && node --test packages/server/dist/test/*.test.js",
+    "dev": "npm run dev --workspace=@acr-js/opsroom-web",
+    "start": "node packages/server/dist/src/index.js",
+    "typecheck": "tsc -b"
+  },
+  "keywords": [
+    "acr",
+    "agentforce",
+    "opsroom",
+    "byzantine-consensus",
+    "atlas-engine",
+    "slack-agent",
+    "mcp"
+  ],
+  "author": "@acr-js",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.9.3"
+  }
+}

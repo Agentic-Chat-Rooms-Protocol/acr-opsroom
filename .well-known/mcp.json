@@ -1,0 +1,45 @@
+{
+  "name": "acr-opsroom",
+  "version": "1.0.0",
+  "protocolVersion": "2024-11-05",
+  "description": "ACR OpsRoom Model Context Protocol endpoint for autonomous operational deliberation and consensus.",
+  "endpoint": "http://localhost:20447/mcp",
+  "tools": [
+    {
+      "name": "opsroom_trigger_incident",
+      "description": "Trigger an autonomous operational incident war room with ML anomaly routing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "telemetry": { "type": "array", "items": { "type": "number" } }
+        },
+        "required": ["title", "description"]
+      }
+    },
+    {
+      "name": "opsroom_evaluate_quorum",
+      "description": "Evaluate Byzantine quorum consensus for an active incident plan.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "incidentId": { "type": "string" }
+        },
+        "required": ["incidentId"]
+      }
+    },
+    {
+      "name": "opsroom_execute_plan",
+      "description": "Execute approved plan in isolated zero-trust ToolHive sandbox.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "incidentId": { "type": "string" },
+          "humanApproved": { "type": "boolean" }
+        },
+        "required": ["incidentId"]
+      }
+    }
+  ]
+}

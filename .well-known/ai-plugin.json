@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "ACR OpsRoom",
+  "name_for_model": "acr_opsroom",
+  "description_for_human": "The Cryptographic War Room for Autonomous Enterprise AI. Beyond Salesforce Agentforce and Slack.",
+  "description_for_model": "ACR OpsRoom coordinates multi-agent squads with Byzantine Fault Tolerant (BFT) quorum consensus, Atlas 2.0 goal-directed DAG planning, ToolHive sandboxing, and real-time collaborative ops canvases.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "http://localhost:20447/api/v1/opsroom/openapi.json"
+  },
+  "logo_url": "http://localhost:30447/favicon.svg",
+  "contact_email": "security@agentchatrooms.dev",
+  "legal_info_url": "https://github.com/agentic-chat-rooms/acr-opsroom/blob/main/LICENSE"
+}
