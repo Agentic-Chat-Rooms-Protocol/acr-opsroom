@@ -11,6 +11,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["node"],
+    "composite": true,
     "baseUrl": ".",
     "paths": {
       "@acr-js/opsroom-core": ["../core/dist/src/index.d.ts"]

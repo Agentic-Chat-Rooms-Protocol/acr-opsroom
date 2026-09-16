@@ -1,5 +1,12 @@
 node_modules/
+dist/
+*.tsbuildinfo
+packages/web/vite.config.js
+packages/web/vite.config.js.map
+packages/web/vite.config.d.ts
+packages/web/vite.config.d.ts.map
 .env
 *.log
 .DS_Store
 Thumbs.db
+.claude/
