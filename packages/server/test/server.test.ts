@@ -121,4 +121,81 @@ describe('OpsRoomServer Endpoints', () => {
     assert.equal(certRes.data.complianceValid, true);
     assert.equal(certRes.data.signatureStandard, 'Ed25519-ACR-V1');
   });
+
+  test('POST /api/v1/opsroom/incidents/:id/execute blocks execution when quorum is not approved', async () => {
+    // 1. Create fresh incident
+    const triggerRes = await makeRequest('POST', '/api/v1/opsroom/incidents/trigger', {
+      title: 'Premature Execution Test',
+      description: 'Attempting execution before quorum approval',
+      telemetry: [10, 12, 11, 13, 100]
+    });
+    const incidentId = triggerRes.data.incident.id;
+
+    // 2. Attempt execute without evaluating quorum -> 400
+    const prematureRes = await makeRequest('POST', `/api/v1/opsroom/incidents/${incidentId}/execute`);
+    assert.equal(prematureRes.status, 400);
+    assert.ok(prematureRes.data.error.includes('Quorum consensus has not been evaluated'));
+
+    // 3. Cast a reject vote and evaluate quorum
+    await makeRequest('POST', `/api/v1/opsroom/incidents/${incidentId}/vote`, {
+      decision: 'reject',
+      justification: 'Critical safety violation detected in plan',
+      confidence: 0.95
+    });
+    const quorumRes = await makeRequest('POST', `/api/v1/opsroom/incidents/${incidentId}/evaluate-quorum`);
+    assert.notEqual(quorumRes.data.quorum.status, 'approved');
+
+    // 4. Attempt execute with non-approved quorum -> 403
+    const blockedRes = await makeRequest('POST', `/api/v1/opsroom/incidents/${incidentId}/execute`);
+    assert.equal(blockedRes.status, 403);
+    assert.ok(blockedRes.data.error.includes('Byzantine consensus was not achieved'));
+  });
+
+  test('POST /api/v1/opsroom/incidents/:id/execute succeeds when 67% Byzantine quorum is approved', async () => {
+    // 1. Trigger incident
+    const triggerRes = await makeRequest('POST', '/api/v1/opsroom/incidents/trigger', {
+      title: 'Authorized Remediation Execution Test',
+      description: 'Validating zero-trust sandboxed plan execution after 67% consensus',
+      telemetry: [50, 52, 51, 53, 500]
+    });
+    const incidentId = triggerRes.data.incident.id;
+    const squadAgents = triggerRes.data.incident.squad.agents;
+
+    // 2. Deliberate
+    await makeRequest('POST', `/api/v1/opsroom/incidents/${incidentId}/deliberate`, {
+      reasoning: 'Safe failover step compiled',
+      confidence: 0.95,
+      proposedActions: [
+        {
+          toolName: 'isolate_zone',
+          serverName: 'acr-sre-mcp',
+          parameters: { zone: 'us-east-1a' },
+          riskLevel: 'medium'
+        }
+      ]
+    });
+
+    // 3. Submit 4 approve votes (supermajority out of 5)
+    for (let i = 0; i < 4; i++) {
+      await makeRequest('POST', `/api/v1/opsroom/incidents/${incidentId}/vote`, {
+        agentId: squadAgents[i].id,
+        decision: 'approve',
+        justification: `Agent ${squadAgents[i].name} verifies plan safety`,
+        confidence: 0.95
+      });
+    }
+
+    // 4. Evaluate quorum -> approved
+    const qRes = await makeRequest('POST', `/api/v1/opsroom/incidents/${incidentId}/evaluate-quorum`);
+    assert.equal(qRes.status, 200);
+    assert.equal(qRes.data.quorum.status, 'approved');
+
+    // 5. Execute plan -> succeeds!
+    const execRes = await makeRequest('POST', `/api/v1/opsroom/incidents/${incidentId}/execute`, {
+      humanApproved: false
+    });
+    assert.equal(execRes.status, 200);
+    assert.equal(execRes.data.execResult.allSucceeded, true);
+    assert.equal(execRes.data.canvas.status, 'resolved');
+  });
 });

@@ -41,7 +41,8 @@ export class MLStatisticalDetector {
    * Compute comprehensive descriptive statistics from a historical window.
    */
   public static computeBaseline(samples: number[]): StatisticalSummary {
-    if (samples.length === 0) {
+    const validSamples = (samples || []).filter(v => typeof v === 'number' && Number.isFinite(v));
+    if (validSamples.length === 0) {
       return {
         count: 0,
         mean: 0,
@@ -55,7 +56,7 @@ export class MLStatisticalDetector {
       };
     }
 
-    const sorted = [...samples].sort((a, b) => a - b);
+    const sorted = [...validSamples].sort((a, b) => a - b);
     const count = sorted.length;
     const sum = sorted.reduce((acc, val) => acc + val, 0);
     const mean = sum / count;
@@ -66,7 +67,7 @@ export class MLStatisticalDetector {
     const median = this.getPercentile(sorted, 0.5);
     const q1 = this.getPercentile(sorted, 0.25);
     const q3 = this.getPercentile(sorted, 0.75);
-    const iqr = q3 - q1;
+    const iqr = Math.max(0, q3 - q1);
 
     return {
       count,
@@ -82,6 +83,8 @@ export class MLStatisticalDetector {
   }
 
   private static getPercentile(sorted: number[], p: number): number {
+    if (sorted.length === 0) return 0;
+    if (sorted.length === 1) return sorted[0];
     const idx = (sorted.length - 1) * p;
     const lower = Math.floor(idx);
     const upper = Math.ceil(idx);
@@ -100,12 +103,13 @@ export class MLStatisticalDetector {
     zThreshold: number = 2.5
   ): AnomalyReport {
     const baseline = this.computeBaseline(baselineSamples);
-    const zScore = baseline.stdDev > 0 ? (currentValue - baseline.mean) / baseline.stdDev : 0;
+    const safeCurrentValue = Number.isFinite(currentValue) ? currentValue : 0;
+    const zScore = baseline.stdDev > 0 ? (safeCurrentValue - baseline.mean) / baseline.stdDev : 0;
     const isZScoreAnomaly = Math.abs(zScore) >= zThreshold;
 
     const iqrLower = baseline.q1 - 1.5 * baseline.iqr;
     const iqrUpper = baseline.q3 + 1.5 * baseline.iqr;
-    const isIqrAnomaly = currentValue < iqrLower || currentValue > iqrUpper;
+    const isIqrAnomaly = baseline.count >= 4 && (safeCurrentValue < iqrLower || safeCurrentValue > iqrUpper);
 
     let severity: OpsSeverity = 'P3';
     let confidence = 0.5;
@@ -122,9 +126,13 @@ export class MLStatisticalDetector {
       confidence = 0.75;
     }
 
+    if (baseline.count < 3) {
+      confidence = Math.min(confidence, 0.40);
+    }
+
     return {
       metricName,
-      currentValue,
+      currentValue: safeCurrentValue,
       baseline,
       zScore: parseFloat(zScore.toFixed(3)),
       isZScoreAnomaly,

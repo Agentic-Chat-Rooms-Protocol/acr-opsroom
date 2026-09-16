@@ -308,6 +308,31 @@ export class OpsRoomServer {
             const body = await this.parseJsonBody(req);
             const humanApproved = Boolean(body.humanApproved);
 
+            // Byzantine Quorum Gating Enforcement
+            if (!incident.quorum) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                error: 'Execution blocked: Quorum consensus has not been evaluated for this incident.' 
+              }));
+              return;
+            }
+
+            if (incident.quorum.status === 'rejected' || incident.quorum.status === 'insufficient_quorum') {
+              res.writeHead(403, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                error: `Execution blocked: Quorum status is '${incident.quorum.status}'. Byzantine consensus was not achieved.` 
+              }));
+              return;
+            }
+
+            if (incident.quorum.status === 'escalated_human' && !humanApproved) {
+              res.writeHead(403, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                error: 'Execution blocked: Byzantine anomalies or forceHumanGating detected. Dual human consent required.' 
+              }));
+              return;
+            }
+
             const plan = incident.executionPlan || Atlas2Engine.compileExecutionPlan(incident, 'Incident Mitigation');
             const execResult = await this.sandboxExecutor.executePlan(plan, humanApproved);
 

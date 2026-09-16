@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
 import { DollarSign, TrendingUp, Zap, Sparkles } from 'lucide-react';
 import { formatCurrency, formatNumber } from '../lib/utils.js';
+import gsap from 'gsap';
 
 export const RoiCalculator: React.FC = () => {
   const [monthlyConversations, setMonthlyConversations] = useState(25000);
   const [activeAgents, setActiveAgents] = useState(50);
+
+  const handleConversationsChange = (val: number) => {
+    const clamped = gsap.utils.clamp(2000, 200000, val);
+    setMonthlyConversations(clamped);
+  };
+
+  const handleAgentsChange = (val: number) => {
+    const clamped = gsap.utils.clamp(5, 250, val);
+    setActiveAgents(clamped);
+  };
 
   // Salesforce Agentforce calculation
   // $2.00 per conversation + $500/month org fee + Data cloud flex credits (~$1,200/mo for 25k)
@@ -52,7 +63,7 @@ export const RoiCalculator: React.FC = () => {
               max="200000"
               step="1000"
               value={monthlyConversations}
-              onChange={(e) => setMonthlyConversations(Number(e.target.value))}
+              onChange={(e) => handleConversationsChange(Number(e.target.value))}
               className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#00f0ff]"
             />
             <div className="flex justify-between text-[10px] text-slate-500 mt-1">
@@ -74,7 +85,7 @@ export const RoiCalculator: React.FC = () => {
               max="250"
               step="5"
               value={activeAgents}
-              onChange={(e) => setActiveAgents(Number(e.target.value))}
+              onChange={(e) => handleAgentsChange(Number(e.target.value))}
               className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
             />
             <div className="flex justify-between text-[10px] text-slate-500 mt-1">

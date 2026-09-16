@@ -1,10 +1,35 @@
-import React from 'react';
-import { Sparkles, Check, X, Shield, ArrowRight } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Sparkles, Check, X } from 'lucide-react';
 import { BATTLECARD_ITEMS } from '../lib/mock-data.js';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export const BattlecardSection: React.FC = () => {
+  const tableRef = useRef<HTMLDivElement | null>(null);
+
+  useGSAP(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    gsap.from('.battlecard-row', {
+      scrollTrigger: {
+        trigger: tableRef.current,
+        start: 'top 85%',
+      },
+      opacity: 0,
+      x: -20,
+      stagger: 0.08,
+      duration: 0.6,
+      ease: 'power2.out',
+    });
+  }, { scope: tableRef });
+
   return (
     <section 
+      ref={tableRef}
       aria-labelledby="battlecard-heading"
       className="p-6 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl mb-8"
     >
@@ -33,7 +58,7 @@ export const BattlecardSection: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-white/5">
             {BATTLECARD_ITEMS.map((item, idx) => (
-              <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
+              <tr key={idx} className="battlecard-row hover:bg-white/[0.02] transition-colors">
                 <td className="py-4 px-4 font-bold text-white align-top whitespace-nowrap">
                   {item.feature}
                 </td>

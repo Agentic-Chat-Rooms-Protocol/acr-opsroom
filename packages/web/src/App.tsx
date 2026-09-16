@@ -260,15 +260,33 @@ export const App: React.FC = () => {
       />
 
       {/* Main Landmark */}
-      <main id="main" role="main" className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 relative z-10">
-        {/* Hero Section */}
-        <HeroSection
-          onStartSimulation={() => {
-            setActiveTab('simulator');
-            handleTriggerIncident();
-          }}
-          onViewBattlecard={() => setActiveTab('battlecard')}
-        />
+      <main id="main" tabIndex={-1} role="main" className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 relative z-10 focus:outline-none">
+        {/* Back Link on Secondary Tabs */}
+        {activeTab !== 'simulator' && (
+          <div className="mb-6 flex items-center justify-between">
+            <button
+              onClick={() => setActiveTab('simulator')}
+              className="touch-target inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-[#00f0ff] transition-colors"
+            >
+              <span>←</span>
+              <span>Back to War Room Simulator</span>
+            </button>
+            <span className="text-[11px] font-mono text-slate-500 uppercase">
+              Section: {activeTab}
+            </span>
+          </div>
+        )}
+
+        {/* Hero Section (Command Center Showcase) */}
+        {activeTab === 'simulator' && (
+          <HeroSection
+            onStartSimulation={() => {
+              setActiveTab('simulator');
+              handleTriggerIncident();
+            }}
+            onViewBattlecard={() => setActiveTab('battlecard')}
+          />
+        )}
 
         {/* Tab Switcher Content */}
         {activeTab === 'simulator' && (

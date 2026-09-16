@@ -14,7 +14,7 @@ export declare class ByzantineConsensusEngine {
      * Evaluate Byzantine anomalies in incoming ballots:
      * 1. Check for contradictory confidence scores (< 0 or > 1)
      * 2. Detect ungrounded radical divergence (e.g., confidence 1.0 on rejection with no rationale)
-     * 3. Detect ballot tampering
+     * 3. Detect ballot tampering or signature forgery
      */
     static auditBallot(ballot: ConsensusBallot, agent: AgentProfile): {
         isFlagged: boolean;
@@ -22,6 +22,10 @@ export declare class ByzantineConsensusEngine {
     };
     /**
      * Tally weighted votes and verify whether Byzantine Quorum target (default 67%) is satisfied.
+     * Protects against:
+     * - Sybil ballot replication (same agent voting multiple times)
+     * - Equivocation (same agent voting approve and reject in same round)
+     * - Signature tampering
      */
     static evaluateQuorum(incidentId: string, squad: AgentSquad, ballots: ConsensusBallot[], forceHumanGating?: boolean): QuorumEvaluation;
     /**
