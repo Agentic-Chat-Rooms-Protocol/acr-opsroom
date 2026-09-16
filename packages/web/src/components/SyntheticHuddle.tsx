@@ -60,8 +60,8 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [liveFrequencies, setLiveFrequencies] = useState<number[]>(() => Array(16).fill(0.12));
 
-  // Audio queue ref
-  const isCancelledRef = useRef(false);
+  // Audio session ref for monotonic cancellation & race-free sequencing
+  const playbackSessionRef = useRef(0);
 
   // Initialize voices on mount
   useEffect(() => {
@@ -73,43 +73,51 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
   // Stop playback when huddle changes or unmounts
   useEffect(() => {
     return () => {
-      isCancelledRef.current = true;
+      playbackSessionRef.current++;
       BrowserAudioFabric.stop();
     };
   }, [huddle?.id]);
 
   // Stop current speech
   const handleStop = useCallback(() => {
-    isCancelledRef.current = true;
+    playbackSessionRef.current++;
     BrowserAudioFabric.stop();
     setIsPlayingAll(false);
     setActiveTurnIndex(null);
     setIsPlayingBrief(false);
-    setLiveFrequencies(Array(16).fill(0.12));
+    setLiveFrequencies(Array(16).fill(0.08));
   }, []);
 
   // Play a single transcript turn
   const handlePlayTurn = useCallback((index: number) => {
     if (!huddle?.lines[index]) return;
     handleStop();
-    isCancelledRef.current = false;
+    const sessionId = ++playbackSessionRef.current;
     setActiveTurnIndex(index);
 
     const line = huddle.lines[index];
     const persona = VoiceModelLoadBalancer.getAgentVoicePersona(line.role);
-    const tunedPersona = {
-      ...persona,
-      rate: isMuted ? 0 : persona.rate * speechSpeed,
-    };
 
-    BrowserAudioFabric.speak(line.text, tunedPersona, {
+    BrowserAudioFabric.speak(line.text, persona, {
       tier: activeTier,
-      onStart: () => setActiveTurnIndex(index),
-      onEnd: () => {
-        setActiveTurnIndex(null);
-        setLiveFrequencies(Array(16).fill(0.12));
+      volume: isMuted ? 0 : 1,
+      speedMultiplier: speechSpeed,
+      onStart: () => {
+        if (playbackSessionRef.current === sessionId) {
+          setActiveTurnIndex(index);
+        }
       },
-      onFrequencies: (freqs) => setLiveFrequencies(freqs),
+      onEnd: () => {
+        if (playbackSessionRef.current === sessionId) {
+          setActiveTurnIndex(null);
+          setLiveFrequencies(Array(16).fill(0.08));
+        }
+      },
+      onFrequencies: (freqs) => {
+        if (playbackSessionRef.current === sessionId) {
+          setLiveFrequencies(freqs);
+        }
+      },
     });
   }, [huddle, activeTier, speechSpeed, isMuted, handleStop]);
 
@@ -122,41 +130,47 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
     }
 
     handleStop();
-    isCancelledRef.current = false;
+    const sessionId = ++playbackSessionRef.current;
     setIsPlayingAll(true);
 
     for (let i = 0; i < huddle.lines.length; i++) {
-      if (isCancelledRef.current) break;
+      if (playbackSessionRef.current !== sessionId) break;
 
       setActiveTurnIndex(i);
       const line = huddle.lines[i];
       const persona = VoiceModelLoadBalancer.getAgentVoicePersona(line.role);
-      const tunedPersona = {
-        ...persona,
-        rate: isMuted ? 0 : persona.rate * speechSpeed,
-      };
 
       await new Promise<void>((resolve) => {
-        BrowserAudioFabric.speak(line.text, tunedPersona, {
+        BrowserAudioFabric.speak(line.text, persona, {
           tier: activeTier,
-          onStart: () => setActiveTurnIndex(i),
+          volume: isMuted ? 0 : 1,
+          speedMultiplier: speechSpeed,
+          onStart: () => {
+            if (playbackSessionRef.current === sessionId) {
+              setActiveTurnIndex(i);
+            }
+          },
           onEnd: () => resolve(),
-          onFrequencies: (freqs) => setLiveFrequencies(freqs),
+          onFrequencies: (freqs) => {
+            if (playbackSessionRef.current === sessionId) {
+              setLiveFrequencies(freqs);
+            }
+          },
         });
       });
 
-      if (isCancelledRef.current) break;
+      if (playbackSessionRef.current !== sessionId) break;
 
       // Realistic human inter-turn conversational pause: 380ms - 520ms
       const pauseDuration = i === huddle.lines.length - 1 ? 200 : 420;
-      setLiveFrequencies(Array(16).fill(0.1));
+      setLiveFrequencies(Array(16).fill(0.08));
       await new Promise((r) => setTimeout(r, pauseDuration));
     }
 
-    if (!isCancelledRef.current) {
+    if (playbackSessionRef.current === sessionId) {
       setIsPlayingAll(false);
       setActiveTurnIndex(null);
-      setLiveFrequencies(Array(16).fill(0.12));
+      setLiveFrequencies(Array(16).fill(0.08));
     }
   }, [huddle, isPlayingAll, activeTier, speechSpeed, isMuted, handleStop]);
 
@@ -169,24 +183,31 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
     }
 
     handleStop();
-    isCancelledRef.current = false;
+    const sessionId = ++playbackSessionRef.current;
     setIsPlayingBrief(true);
 
     const commanderPersona = VoiceModelLoadBalancer.getAgentVoicePersona('atlas_orchestrator');
-    const tunedPersona = {
-      ...commanderPersona,
-      pitch: 0.86,
-      rate: isMuted ? 0 : 0.98 * speechSpeed,
-    };
 
-    BrowserAudioFabric.speak(huddle.executiveBrief, tunedPersona, {
+    BrowserAudioFabric.speak(huddle.executiveBrief, commanderPersona, {
       tier: activeTier,
-      onStart: () => setIsPlayingBrief(true),
-      onEnd: () => {
-        setIsPlayingBrief(false);
-        setLiveFrequencies(Array(16).fill(0.12));
+      volume: isMuted ? 0 : 1,
+      speedMultiplier: speechSpeed,
+      onStart: () => {
+        if (playbackSessionRef.current === sessionId) {
+          setIsPlayingBrief(true);
+        }
       },
-      onFrequencies: (freqs) => setLiveFrequencies(freqs),
+      onEnd: () => {
+        if (playbackSessionRef.current === sessionId) {
+          setIsPlayingBrief(false);
+          setLiveFrequencies(Array(16).fill(0.08));
+        }
+      },
+      onFrequencies: (freqs) => {
+        if (playbackSessionRef.current === sessionId) {
+          setLiveFrequencies(freqs);
+        }
+      },
     });
   }, [huddle?.executiveBrief, isPlayingBrief, activeTier, speechSpeed, isMuted, handleStop]);
 
@@ -370,7 +391,9 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             </span>
             <span className="text-white font-bold">{activeLine.speakerName}</span>
             <span className="text-[11px] text-purple-300 font-mono">
-              ({activeSpeakerPersona.timbreProfile} • {activeSpeakerPersona.pitch} pitch • {activeSpeakerPersona.rate}x rate)
+              ({activeSpeakerPersona.timbreProfile} • {activeSpeakerPersona.pitch} pitch • {activeSpeakerPersona.rate}x rate • {
+                activeSpeakerPersona.stereoPan === 0 ? 'Center Stage' : activeSpeakerPersona.stereoPan < 0 ? `${Math.abs(Math.round(activeSpeakerPersona.stereoPan * 100))}% Left` : `${Math.round(activeSpeakerPersona.stereoPan * 100)}% Right`
+              })
             </span>
           </div>
 

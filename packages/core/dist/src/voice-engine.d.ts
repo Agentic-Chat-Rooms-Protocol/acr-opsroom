@@ -56,6 +56,9 @@ export interface VoicePersona {
     preferredGender: 'male' | 'female' | 'neutral';
     conversationalStyle: string;
     sampleQuote: string;
+    stereoPan: number;
+    formants: [number, number, number];
+    systemVoiceHints: string[];
 }
 export interface ConversationalSpeechTurn {
     speakerName: string;
@@ -82,9 +85,14 @@ export declare class VoiceModelLoadBalancer {
      */
     static getAgentVoicePersona(role: AgentRole): VoicePersona;
     /**
-     * Generates realistic multi-band frequency spectrum data for waveform visualizer
+     * Generates realistic multi-band frequency spectrum data for waveform visualizer,
+     * modeling vowel formant resonance (F1, F2, F3) and syllable rhythm envelopes.
      */
-    static generateSpeechFrequencies(sampleCount?: number, intensity?: number): number[];
+    static generateSpeechFrequencies(sampleCount?: number, intensity?: number, options?: {
+        timestampMs?: number;
+        persona?: VoicePersona;
+        active?: boolean;
+    }): number[];
     /**
      * Creates an authentic human conversational turn sequence with realistic micro-pauses
      */

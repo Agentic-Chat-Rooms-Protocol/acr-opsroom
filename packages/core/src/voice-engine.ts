@@ -62,6 +62,9 @@ export interface VoicePersona {
   preferredGender: 'male' | 'female' | 'neutral';
   conversationalStyle: string;
   sampleQuote: string;
+  stereoPan: number; // -1.0 (far left) to 1.0 (far right)
+  formants: [number, number, number]; // [F1, F2, F3] formant resonance frequencies in Hz
+  systemVoiceHints: string[]; // Preferred OS voice names
 }
 
 export interface ConversationalSpeechTurn {
@@ -135,6 +138,9 @@ export const AGENT_VOCAL_PERSONAS: Record<AgentRole, VoicePersona> = {
     preferredGender: 'male',
     conversationalStyle: 'Direct, commanding, and objective incident commander.',
     sampleQuote: 'Incident posture escalated. Aligning squad on critical path mitigation.',
+    stereoPan: 0.0,
+    formants: [460, 1280, 2420],
+    systemVoiceHints: ['david', 'alex', 'guy', 'google us english', 'en-us-x-sfg#male_1-local'],
   },
   sre_reliability: {
     role: 'sre_reliability',
@@ -146,6 +152,9 @@ export const AGENT_VOCAL_PERSONAS: Record<AgentRole, VoicePersona> = {
     preferredGender: 'male',
     conversationalStyle: 'Fast-paced, metric-focused, latency and buffer aware.',
     sampleQuote: 'Replication lag surging past 450ms. Recommending immediate traffic shedding.',
+    stereoPan: -0.4,
+    formants: [540, 1420, 2580],
+    systemVoiceHints: ['michael', 'mark', 'daniel', 'fred', 'google uk english male', 'en-gb-x-rjs#male_1-local'],
   },
   secops_guardian: {
     role: 'secops_guardian',
@@ -157,6 +166,9 @@ export const AGENT_VOCAL_PERSONAS: Record<AgentRole, VoicePersona> = {
     preferredGender: 'female',
     conversationalStyle: 'Methodical, defensive, zero-trust verification focused.',
     sampleQuote: 'Zero-trust containment verified. Egress allowlists strictly enforced.',
+    stereoPan: 0.4,
+    formants: [640, 1860, 2920],
+    systemVoiceHints: ['bella', 'zira', 'samantha', 'victoria', 'google us english female', 'en-us-x-sfg#female_1-local'],
   },
   dataops_engineer: {
     role: 'dataops_engineer',
@@ -168,6 +180,9 @@ export const AGENT_VOCAL_PERSONAS: Record<AgentRole, VoicePersona> = {
     preferredGender: 'male',
     conversationalStyle: 'Deliberate, schema-protective, transaction-safe cadence.',
     sampleQuote: 'WAL checkpoint queue holding. Primary failover verified transactionally clean.',
+    stereoPan: -0.75,
+    formants: [410, 1180, 2320],
+    systemVoiceHints: ['george', 'richard', 'oliver', 'en-au-x-aub#male_1-local'],
   },
   finops_overseer: {
     role: 'finops_overseer',
@@ -179,6 +194,9 @@ export const AGENT_VOCAL_PERSONAS: Record<AgentRole, VoicePersona> = {
     preferredGender: 'female',
     conversationalStyle: 'Budget-aware, calculated, cost-per-minute conscious.',
     sampleQuote: 'Failover infrastructure within allocated monthly cloud reserve ceiling.',
+    stereoPan: 0.75,
+    formants: [590, 1720, 2820],
+    systemVoiceHints: ['sarah', 'karen', 'jenny', 'fiona', 'google uk english female'],
   },
   compliance_auditor: {
     role: 'compliance_auditor',
@@ -190,6 +208,9 @@ export const AGENT_VOCAL_PERSONAS: Record<AgentRole, VoicePersona> = {
     preferredGender: 'female',
     conversationalStyle: 'Meticulous, audit-proof, regulatory governance guardian.',
     sampleQuote: 'Cryptographic ledger signed. SOC2 and Byzantine proof requirements met.',
+    stereoPan: 0.15,
+    formants: [510, 1640, 2680],
+    systemVoiceHints: ['emma', 'susan', 'catherine', 'tessa', 'moira', 'en-in-x-cxx#female_1-local'],
   },
 };
 
@@ -338,15 +359,50 @@ export class VoiceModelLoadBalancer {
   }
 
   /**
-   * Generates realistic multi-band frequency spectrum data for waveform visualizer
+   * Generates realistic multi-band frequency spectrum data for waveform visualizer,
+   * modeling vowel formant resonance (F1, F2, F3) and syllable rhythm envelopes.
    */
-  public static generateSpeechFrequencies(sampleCount: number = 16, intensity: number = 0.7): number[] {
+  public static generateSpeechFrequencies(
+    sampleCount: number = 16,
+    intensity: number = 0.7,
+    options?: {
+      timestampMs?: number;
+      persona?: VoicePersona;
+      active?: boolean;
+    }
+  ): number[] {
+    if (options && options.active === false) {
+      return Array(sampleCount).fill(0.08);
+    }
+
+    const t = (options?.timestampMs ?? Date.now()) / 1000;
+    const persona = options?.persona;
+    const rate = persona?.rate || 1.0;
+
+    // Syllable rhythm envelope (~4.2 Hz natural conversational speech cadence)
+    const syllableEnvelope = 0.55 + 0.45 * Math.sin(t * 4.2 * 2 * Math.PI * rate);
+    const formants = persona?.formants || [500, 1500, 2500];
+
+    // Formant frequency mapping across 16 logarithmic spectrum bands
+    const f1Band = Math.min(sampleCount - 1, Math.max(1, Math.round(((formants[0] - 100) / 700) * 4)));
+    const f2Band = Math.min(sampleCount - 1, Math.max(4, Math.round(4 + ((formants[1] - 800) / 1700) * 6)));
+    const f3Band = Math.min(sampleCount - 1, Math.max(10, Math.round(10 + ((formants[2] - 2500) / 5500) * 5)));
+
     const freqs: number[] = [];
     for (let i = 0; i < sampleCount; i++) {
-      // Bell-shaped curve with acoustic fluctuations
-      const centerFactor = 1 - Math.abs(i - sampleCount / 2) / (sampleCount / 2);
-      const val = Math.max(0.1, Math.min(1.0, (centerFactor * 0.6 + Math.random() * 0.4) * intensity));
-      freqs.push(parseFloat(val.toFixed(2)));
+      let resonance = 0.15;
+      const distF1 = Math.abs(i - f1Band);
+      const distF2 = Math.abs(i - f2Band);
+      const distF3 = Math.abs(i - f3Band);
+
+      if (distF1 <= 1) resonance += (1 - distF1 * 0.4) * 0.45;
+      if (distF2 <= 1) resonance += (1 - distF2 * 0.4) * 0.35;
+      if (distF3 <= 1) resonance += (1 - distF3 * 0.4) * 0.25;
+
+      const microJitter = 0.12 * Math.sin(t * 18.0 + i * 1.7) + (Math.random() * 0.08 - 0.04);
+      const energy = (resonance * syllableEnvelope + microJitter) * intensity;
+      const clamped = Math.max(0.08, Math.min(1.0, energy));
+      freqs.push(parseFloat(clamped.toFixed(2)));
     }
     return freqs;
   }
@@ -361,7 +417,7 @@ export class VoiceModelLoadBalancer {
       const persona = this.getAgentVoicePersona(turn.role);
       // Realistic human inter-turn pause: 350ms to 550ms
       const pauseAfterMs = index === turns.length - 1 ? 200 : 400 + Math.floor(Math.random() * 150);
-      const frequencies = this.generateSpeechFrequencies(16, 0.85);
+      const frequencies = this.generateSpeechFrequencies(16, 0.85, { persona });
 
       return {
         speakerName: turn.speakerName,

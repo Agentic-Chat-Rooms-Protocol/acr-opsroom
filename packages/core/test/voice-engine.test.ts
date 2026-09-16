@@ -98,6 +98,7 @@ describe('VoiceModelLoadBalancer & Dynamic Hardware Profiler', () => {
 
     const neuralVoices = new Set<string>();
     const pitches = new Set<number>();
+    const pans = new Set<number>();
 
     for (const role of roles) {
       const persona = VoiceModelLoadBalancer.getAgentVoicePersona(role);
@@ -106,14 +107,20 @@ describe('VoiceModelLoadBalancer & Dynamic Hardware Profiler', () => {
       assert.ok(persona.rate >= 0.85 && persona.rate <= 1.25);
       assert.ok(persona.neuralVoiceId.length > 0);
       assert.ok(persona.sampleQuote.length > 0);
+      assert.ok(persona.stereoPan >= -1.0 && persona.stereoPan <= 1.0);
+      assert.equal(persona.formants.length, 3);
+      assert.ok(persona.formants[0] >= 350 && persona.formants[0] <= 800);
+      assert.ok(persona.systemVoiceHints.length >= 2);
 
       neuralVoices.add(persona.neuralVoiceId);
       pitches.add(persona.pitch);
+      pans.add(persona.stereoPan);
     }
 
     // Ensure variety in vocal profiles
     assert.ok(neuralVoices.size >= 5, 'Every agent should have distinct neural voice profile');
     assert.ok(pitches.size >= 4, 'Agents should have distinct vocal pitch characteristics');
+    assert.ok(pans.size >= 5, 'Agents should be distributed spatially across stereo soundstage');
   });
 
   test('creates conversational turns with natural pauses and acoustic frequency data', () => {
