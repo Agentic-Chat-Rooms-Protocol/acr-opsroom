@@ -69,13 +69,29 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
   const engineModalRef = useRef<HTMLDivElement>(null);
   const downloadModalRef = useRef<HTMLDivElement>(null);
   const lastFocusedElementRef = useRef<HTMLElement | null>(null);
+  const lastFocusedTierButtonRef = useRef<HTMLElement | null>(null);
 
-  // Accessible Keyboard Dismissal (Escape) & Body Scroll Lock
+  // Dedicated Body Scroll Lock: clean single entry & exit
+  const isAnyModalOpen = isEngineModalOpen || pendingDownloadTier !== null;
   useEffect(() => {
-    if (!isEngineModalOpen && pendingDownloadTier === null) return;
+    if (!isAnyModalOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isAnyModalOpen]);
+
+  // Accessible Keyboard Dismissal (Escape in capture phase to prevent bubbling to parent modals)
+  useEffect(() => {
+    if (!isAnyModalOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
         if (pendingDownloadTier !== null) {
           if (!downloadProgress.isDownloading) {
             setPendingDownloadTier(null);
@@ -86,17 +102,13 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
       }
     };
 
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [isEngineModalOpen, pendingDownloadTier, downloadProgress.isDownloading]);
+  }, [isAnyModalOpen, pendingDownloadTier, isEngineModalOpen, downloadProgress.isDownloading]);
 
-  // Focus management: focus modal on open & restore focus to trigger on close
+  // Focus management: focus modal on open & restore focus to trigger button on close
   useEffect(() => {
     if (isEngineModalOpen) {
       lastFocusedElementRef.current = document.activeElement as HTMLElement | null;
@@ -113,8 +125,10 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
     }
   }, [isEngineModalOpen]);
 
+  // Focus management for secondary download modal: restore focus to the tier button that opened it
   useEffect(() => {
     if (pendingDownloadTier !== null) {
+      lastFocusedTierButtonRef.current = document.activeElement as HTMLElement | null;
       const timer = setTimeout(() => {
         const firstFocusable = downloadModalRef.current?.querySelector<HTMLElement>(
           'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -123,6 +137,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
       }, 50);
       return () => {
         clearTimeout(timer);
+        lastFocusedTierButtonRef.current?.focus();
       };
     }
   }, [pendingDownloadTier]);
@@ -141,12 +156,12 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
     const lastElement = focusable[focusable.length - 1];
 
     if (e.shiftKey) {
-      if (document.activeElement === firstElement) {
+      if (document.activeElement === firstElement || !modalRef.current.contains(document.activeElement)) {
         lastElement.focus();
         e.preventDefault();
       }
     } else {
-      if (document.activeElement === lastElement) {
+      if (document.activeElement === lastElement || !modalRef.current.contains(document.activeElement)) {
         firstElement.focus();
         e.preventDefault();
       }
@@ -671,24 +686,27 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
       {/* MODAL 1: Dynamic Hardware Profiler & Voice Model Load Balancer */}
       {isEngineModalOpen && typeof document !== 'undefined' && createPortal(
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="engine-modal-title"
-          aria-describedby="engine-modal-description"
-          onKeyDown={(e) => handleModalTabTrap(e, engineModalRef)}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setIsEngineModalOpen(false);
             }
           }}
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fadeIn"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-fadeIn"
+          aria-hidden={pendingDownloadTier !== null ? 'true' : undefined}
         >
           <div
             ref={engineModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="engine-modal-title"
+            aria-describedby="engine-modal-description"
+            tabIndex={-1}
+            onKeyDown={(e) => handleModalTabTrap(e, engineModalRef)}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-950/95 border border-white/10 rounded-3xl p-6 sm:p-7 shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_30px_rgba(6,182,212,0.15)] relative text-slate-200 ring-1 ring-white/10 my-auto"
+            className="w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col bg-slate-950/95 border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_30px_rgba(6,182,212,0.15)] relative text-slate-200 ring-1 ring-white/10 overflow-hidden my-auto"
           >
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10 shrink-0">
+            {/* Pinned Header */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 shrink-0 bg-slate-950/95">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
                   <Cpu className="w-4 h-4" aria-hidden="true" />
@@ -711,127 +729,123 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               </button>
             </div>
 
-            {/* Hardware Diagnostic Banner */}
-            <div className="p-4 rounded-2xl bg-slate-900/90 border border-white/10 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-white">Detected Hardware Profile:</span>
-                  <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 font-mono text-[10px]">
-                    {hardwareProfile.detectedSpecsSummary}
-                  </span>
-                </div>
-                <p className="text-slate-400 text-[11px]">
-                  WebGPU: {hardwareProfile.hasWebGPU ? '✅ Supported' : '❌ Unavailable'} • AudioContext: {hardwareProfile.hasAudioContext ? '✅' : '❌'} • SpeechSynthesis: {hardwareProfile.hasSpeechSynthesis ? '✅' : '❌'}
-                </p>
-              </div>
-
-              <div className="text-right shrink-0">
-                <div className="text-[10px] uppercase font-mono text-slate-400">Readiness Score</div>
-                <div className="text-lg font-extrabold text-emerald-400 font-mono">
-                  {hardwareProfile.readinessScore}/100
-                </div>
-              </div>
-            </div>
-
-            {/* Tier Selection Cards */}
-            <div className="space-y-3 mb-6">
-              {[0, 1, 2].map((tierNum) => {
-                const t = tierNum as VoiceTier;
-                const spec = VOICE_MODEL_SPECS[t];
-                const isSelected = activeTier === t;
-                const isRecommended = hardwareProfile.recommendedTier === t;
-                const isDownloaded = downloadedTiers.has(t);
-                const safety = VoiceModelLoadBalancer.evaluateTierSafety(t, hardwareProfile);
-
-                return (
-                  <div
-                    key={t}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        requestTierSelection(t);
-                      }
-                    }}
-                    onClick={() => requestTierSelection(t)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
-                      isSelected
-                        ? 'bg-cyan-950/30 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/30'
-                        : 'bg-slate-900/60 border-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-white">Tier {t}: {spec.name}</span>
-                          {isRecommended && (
-                            <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full flex items-center gap-1">
-                              <Zap className="w-2.5 h-2.5" /> Recommended by Balancer
-                            </span>
-                          )}
-                          {isSelected && (
-                            <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-full">
-                              Active
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-slate-400">{spec.description}</p>
-                      </div>
-
-                      <div className="text-right shrink-0 text-xs font-mono">
-                        <div className="text-white font-bold">
-                          {spec.downloadSizeMb === 0 ? '0 MB Download' : `${spec.downloadSizeMb} MB`}
-                        </div>
-                        <div className="text-[10px] text-slate-400">~{spec.latencyEstimateMs}ms latency</div>
-                      </div>
-                    </div>
-
-                    {/* Safety warnings if user overrides */}
-                    {!safety.isSafe && (
-                      <div className="mt-3 p-2.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-amber-300 text-[11px] flex items-start gap-2">
-                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
-                        <div>
-                          {safety.warnings.map((w, wIdx) => (
-                            <div key={wIdx}>{w}</div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Action button inside card */}
-                    <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-xs">
-                      <span className="text-[11px] text-slate-400 font-mono">
-                        Backend: {spec.computeBackend}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          requestTierSelection(t);
-                        }}
-                        className={`px-3 py-1.5 rounded-xl font-semibold text-xs transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98 ${
-                          isSelected
-                            ? 'bg-cyan-500 text-slate-950 font-bold shadow-md shadow-cyan-500/25'
-                            : isDownloaded
-                            ? 'bg-white/10 hover:bg-white/20 text-white'
-                            : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-500/20'
-                        }`}
-                      >
-                        {isSelected ? 'Active' : isDownloaded ? 'Select' : `Confirm & Download (${spec.downloadSizeMb}MB)`}
-                      </button>
-                    </div>
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+              {/* Hardware Diagnostic Banner */}
+              <div className="p-4 rounded-2xl bg-slate-900/90 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white">Detected Hardware Profile:</span>
+                    <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 font-mono text-[10px]">
+                      {hardwareProfile.detectedSpecsSummary}
+                    </span>
                   </div>
-                );
-              })}
+                  <p className="text-slate-400 text-[11px]">
+                    WebGPU: {hardwareProfile.hasWebGPU ? '✅ Supported' : '❌ Unavailable'} • AudioContext: {hardwareProfile.hasAudioContext ? '✅' : '❌'} • SpeechSynthesis: {hardwareProfile.hasSpeechSynthesis ? '✅' : '❌'}
+                  </p>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <div className="text-[10px] uppercase font-mono text-slate-400">Readiness Score</div>
+                  <div className="text-lg font-extrabold text-emerald-400 font-mono">
+                    {hardwareProfile.readinessScore}/100
+                  </div>
+                </div>
+              </div>
+
+              {/* Tier Selection Cards */}
+              <div className="space-y-3">
+                {[0, 1, 2].map((tierNum) => {
+                  const t = tierNum as VoiceTier;
+                  const spec = VOICE_MODEL_SPECS[t];
+                  const isSelected = activeTier === t;
+                  const isRecommended = hardwareProfile.recommendedTier === t;
+                  const isDownloaded = downloadedTiers.has(t);
+                  const safety = VoiceModelLoadBalancer.evaluateTierSafety(t, hardwareProfile);
+
+                  return (
+                    <div
+                      key={t}
+                      onClick={() => requestTierSelection(t)}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-cyan-950/30 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/30'
+                          : 'bg-slate-900/60 border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-white">Tier {t}: {spec.name}</span>
+                            {isRecommended && (
+                              <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full flex items-center gap-1">
+                                <Zap className="w-2.5 h-2.5" /> Recommended by Balancer
+                              </span>
+                            )}
+                            {isSelected && (
+                              <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-full">
+                                Active
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-400">{spec.description}</p>
+                        </div>
+
+                        <div className="text-right shrink-0 text-xs font-mono">
+                          <div className="text-white font-bold">
+                            {spec.downloadSizeMb === 0 ? '0 MB Download' : `${spec.downloadSizeMb} MB`}
+                          </div>
+                          <div className="text-[10px] text-slate-400">~{spec.latencyEstimateMs}ms latency</div>
+                        </div>
+                      </div>
+
+                      {/* Safety warnings if user overrides */}
+                      {!safety.isSafe && (
+                        <div className="mt-3 p-2.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-amber-300 text-[11px] flex items-start gap-2">
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
+                          <div>
+                            {safety.warnings.map((w, wIdx) => (
+                              <div key={wIdx}>{w}</div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action button inside card */}
+                      <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-xs">
+                        <span className="text-[11px] text-slate-400 font-mono">
+                          Backend: {spec.computeBackend}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            requestTierSelection(t);
+                          }}
+                          className={`px-3 py-1.5 rounded-xl font-semibold text-xs transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98 ${
+                            isSelected
+                              ? 'bg-cyan-500 text-slate-950 font-bold shadow-md shadow-cyan-500/25'
+                              : isDownloaded
+                              ? 'bg-white/10 hover:bg-white/20 text-white'
+                              : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-500/20'
+                          }`}
+                        >
+                          {isSelected ? 'Active' : isDownloaded ? 'Select' : `Confirm & Download (${spec.downloadSizeMb}MB)`}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-white/10">
+            {/* Pinned Footer */}
+            <div className="flex items-center justify-between p-6 pt-3 border-t border-white/10 shrink-0 bg-slate-950/95">
               <span className="text-[11px] text-slate-500 font-mono hidden sm:inline">
                 WebGPU / SIMD Neural Voice Fabric
               </span>
               <button
                 onClick={() => setIsEngineModalOpen(false)}
-                className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-all cursor-pointer border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98"
+                className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-all cursor-pointer border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98 ml-auto sm:ml-0"
               >
                 Close Settings
               </button>
@@ -844,24 +858,26 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
       {/* MODAL 2: Explicit User Confirmation & Model Download Modal */}
       {pendingDownloadTier !== null && typeof document !== 'undefined' && createPortal(
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="confirm-download-title"
-          aria-describedby="confirm-download-description"
-          onKeyDown={(e) => handleModalTabTrap(e, downloadModalRef)}
           onClick={(e) => {
             if (e.target === e.currentTarget && !downloadProgress.isDownloading) {
               setPendingDownloadTier(null);
             }
           }}
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fadeIn"
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-fadeIn"
         >
           <div
             ref={downloadModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-download-title"
+            aria-describedby="confirm-download-description"
+            tabIndex={-1}
+            onKeyDown={(e) => handleModalTabTrap(e, downloadModalRef)}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-slate-950/95 border border-white/15 rounded-3xl p-6 sm:p-7 shadow-[0_0_60px_rgba(0,0,0,0.85),0_0_30px_rgba(6,182,212,0.2)] relative text-slate-200 ring-1 ring-cyan-500/30 my-auto"
+            className="w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] flex flex-col bg-slate-950/95 border border-white/15 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.85),0_0_30px_rgba(6,182,212,0.2)] relative text-slate-200 ring-1 ring-cyan-500/30 overflow-hidden my-auto"
           >
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+            {/* Pinned Header */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 shrink-0 bg-slate-950/95">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
                   <Download className="w-5 h-5 animate-bounce" aria-hidden="true" />
@@ -885,7 +901,8 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               </button>
             </div>
 
-            <div className="space-y-4 text-xs mb-6">
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-xs">
               <p className="text-slate-300 leading-relaxed">
                 You are requesting to download and initialize the on-device neural voice model:
               </p>
@@ -936,8 +953,8 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               )}
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+            {/* Pinned Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 pt-3 border-t border-white/10 shrink-0 bg-slate-950/95">
               <button
                 disabled={downloadProgress.isDownloading}
                 onClick={() => setPendingDownloadTier(null)}
