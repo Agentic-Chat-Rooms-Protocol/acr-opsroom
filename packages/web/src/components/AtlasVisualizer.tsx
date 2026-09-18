@@ -3,6 +3,8 @@ import { Layers, ArrowRight, ShieldCheck, Check, AlertCircle } from 'lucide-reac
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
+gsap.registerPlugin(useGSAP);
+
 export const AtlasVisualizer: React.FC = () => {
   const [selectedArch, setSelectedArch] = useState<'atlas2' | 'atlas1'>('atlas2');
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -11,13 +13,18 @@ export const AtlasVisualizer: React.FC = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
 
-    gsap.from('.atlas-card', {
-      opacity: 0,
-      y: 18,
-      stagger: 0.07,
-      duration: 0.5,
-      ease: 'power2.out',
-    });
+    gsap.fromTo(
+      '.atlas-card',
+      { opacity: 0, y: 16 },
+      {
+        opacity: 1,
+        y: 0,
+        stagger: 0.05,
+        duration: 0.45,
+        ease: 'power2.out',
+        clearProps: 'all',
+      }
+    );
   }, { scope: containerRef, dependencies: [selectedArch] });
 
   return (
@@ -39,10 +46,19 @@ export const AtlasVisualizer: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-white/10">
+        <div 
+          role="tablist"
+          aria-label="Architecture Comparison"
+          className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-white/10"
+        >
           <button
+            role="tab"
+            id="arch-tab-atlas2"
+            aria-selected={selectedArch === 'atlas2'}
+            aria-controls="arch-panel-atlas2"
+            tabIndex={selectedArch === 'atlas2' ? 0 : -1}
             onClick={() => setSelectedArch('atlas2')}
-            className={`touch-target px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`touch-target px-3 py-1.5 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
               selectedArch === 'atlas2'
                 ? 'bg-[#00f0ff] text-black shadow-md shadow-[#00f0ff]/20'
                 : 'text-slate-400 hover:text-white'
@@ -51,8 +67,13 @@ export const AtlasVisualizer: React.FC = () => {
             ACR Atlas 2.0 (Evolved)
           </button>
           <button
+            role="tab"
+            id="arch-tab-atlas1"
+            aria-selected={selectedArch === 'atlas1'}
+            aria-controls="arch-panel-atlas1"
+            tabIndex={selectedArch === 'atlas1' ? 0 : -1}
             onClick={() => setSelectedArch('atlas1')}
-            className={`touch-target px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`touch-target px-3 py-1.5 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
               selectedArch === 'atlas1'
                 ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
                 : 'text-slate-400 hover:text-white'
@@ -64,8 +85,12 @@ export const AtlasVisualizer: React.FC = () => {
       </div>
 
       {selectedArch === 'atlas2' ? (
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-2 mb-6">
+        <div role="tabpanel" id="arch-panel-atlas2" aria-labelledby="arch-tab-atlas2">
+          <div 
+            role="list"
+            aria-label="Atlas 2.0 Architecture Phases"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-6"
+          >
             <div className="atlas-card p-3.5 rounded-xl bg-slate-950 border border-[#00f0ff]/30 text-center">
               <span className="text-[10px] font-mono text-[#00f0ff] uppercase font-bold">Phase 1</span>
               <h3 className="text-xs font-bold text-white mt-1">Telemetry Sensing</h3>
@@ -112,8 +137,8 @@ export const AtlasVisualizer: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+        <div role="tabpanel" id="arch-panel-atlas1" aria-labelledby="arch-tab-atlas1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <div className="atlas-card p-4 rounded-xl bg-slate-950 border border-amber-500/30">
               <span className="text-[10px] font-mono text-amber-400 uppercase font-bold">Step 1</span>
               <h3 className="text-xs font-bold text-white mt-1">Static Topic Selection</h3>
