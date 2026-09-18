@@ -78,8 +78,15 @@ export class HuddleManager {
     huddle.keyActionItemsExtracted = newActionItems;
     huddle.canvasSyncTimestamp = Date.now();
 
-    // Sync into canvas
-    OpsCanvasManager.appendMarkdown(canvas, `### Synthetic Huddle Executive Brief\n${brief}`);
+    // Sync into canvas cleanly without duplicate sections
+    const briefSection = `### Synthetic Huddle Executive Brief\n${brief}`;
+    const headerRegex = /### Synthetic Huddle Executive Brief[\s\S]*?(?=\n###|\n##|$)/;
+    if (headerRegex.test(canvas.summaryMarkdown)) {
+      canvas.summaryMarkdown = canvas.summaryMarkdown.replace(headerRegex, briefSection);
+      OpsCanvasManager.refreshMerkleRoot(canvas);
+    } else {
+      OpsCanvasManager.appendMarkdown(canvas, briefSection);
+    }
     for (const itemText of newActionItems) {
       OpsCanvasManager.upsertActionItem(canvas, {
         title: itemText,

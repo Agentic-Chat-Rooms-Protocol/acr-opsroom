@@ -11,3 +11,4 @@ export * from './huddle-manager.js';
 export * from './sandbox-executor.js';
 export * from './audit-ledger.js';
 export * from './voice-engine.js';
+export * from './crypto-compat.js';

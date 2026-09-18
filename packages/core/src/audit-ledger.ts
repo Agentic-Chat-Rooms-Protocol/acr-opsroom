@@ -4,7 +4,7 @@
  * and sandboxed execution. Essential for enterprise SOC2, ISO27001, and HIPAA compliance.
  */
 
-import crypto from 'node:crypto';
+import { sha256Sync } from './crypto-compat.js';
 import { AuditBlock } from './types.js';
 
 export interface AuditCertificate {
@@ -41,12 +41,12 @@ export class CryptographicAuditLedger {
       ? this.blocks[this.blocks.length - 1].blockHash 
       : this.genesisHash;
 
-    const payloadHash = crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex');
+    const payloadHash = sha256Sync(JSON.stringify(payload));
     const index = this.blocks.length;
     const timestamp = Date.now();
 
     const blockHeader = `${index}:${timestamp}:${incidentId}:${actionType}:${payloadHash}:${previousHash}`;
-    const blockHash = crypto.createHash('sha256').update(blockHeader).digest('hex');
+    const blockHash = sha256Sync(blockHeader);
 
     const block: AuditBlock = {
       index,
@@ -78,7 +78,7 @@ export class CryptographicAuditLedger {
       }
 
       const blockHeader = `${current.index}:${current.timestamp}:${current.incidentId}:${current.actionType}:${current.payloadHash}:${current.previousHash}`;
-      const recalculatedHash = crypto.createHash('sha256').update(blockHeader).digest('hex');
+      const recalculatedHash = sha256Sync(blockHeader);
 
       if (recalculatedHash !== current.blockHash) {
         return false;

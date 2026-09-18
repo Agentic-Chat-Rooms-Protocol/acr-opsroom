@@ -111,4 +111,39 @@ describe('Atlas2Engine Deliberation & State Machine', () => {
     assert.equal(sim.passed, false);
     assert.equal(plan.steps[0].status, 'failed');
   });
+
+  test('handles idempotent self-transitions without error', () => {
+    const incident = Atlas2Engine.createIncident('Idempotency Test', 'Self transitions', squad);
+    assert.equal(incident.status, 'detecting');
+
+    // Self-transition should be no-op and succeed
+    const trans = Atlas2Engine.transitionPhase(incident, 'detecting');
+    assert.equal(trans.fromPhase, 'detect');
+    assert.equal(trans.toPhase, 'detect');
+    assert.equal(incident.status, 'detecting');
+  });
+
+  test('supports full execution lifecycle: executing -> verifying -> resolved and direct executing -> resolved', () => {
+    const incident = Atlas2Engine.createIncident('Lifecycle Test', 'Full pipeline', squad);
+
+    Atlas2Engine.transitionPhase(incident, 'deliberating');
+    Atlas2Engine.transitionPhase(incident, 'awaiting_quorum');
+    Atlas2Engine.transitionPhase(incident, 'executing');
+    assert.equal(incident.status, 'executing');
+
+    // executing -> verifying -> resolved
+    Atlas2Engine.transitionPhase(incident, 'verifying');
+    assert.equal(incident.status, 'verifying');
+
+    Atlas2Engine.transitionPhase(incident, 'resolved');
+    assert.equal(incident.status, 'resolved');
+
+    // Direct transition test: reset to executing and transition straight to resolved
+    const incident2 = Atlas2Engine.createIncident('Direct Transition Test', 'Skip verifying', squad);
+    Atlas2Engine.transitionPhase(incident2, 'deliberating');
+    Atlas2Engine.transitionPhase(incident2, 'awaiting_quorum');
+    Atlas2Engine.transitionPhase(incident2, 'executing');
+    Atlas2Engine.transitionPhase(incident2, 'resolved');
+    assert.equal(incident2.status, 'resolved');
+  });
 });

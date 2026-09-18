@@ -141,6 +141,18 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
       const persona = VoiceModelLoadBalancer.getAgentVoicePersona(line.role);
 
       await new Promise<void>((resolve) => {
+        let isResolved = false;
+        const complete = () => {
+          if (!isResolved) {
+            isResolved = true;
+            resolve();
+          }
+        };
+
+        const wordCount = line.text.trim().split(/\s+/).length;
+        const maxTurnMs = Math.max(2000, (wordCount / (90 * speechSpeed)) * 60 * 1000) + 2500;
+        const turnTimeout = setTimeout(complete, maxTurnMs);
+
         BrowserAudioFabric.speak(line.text, persona, {
           tier: activeTier,
           volume: isMuted ? 0 : 1,
@@ -150,7 +162,14 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               setActiveTurnIndex(i);
             }
           },
-          onEnd: () => resolve(),
+          onEnd: () => {
+            clearTimeout(turnTimeout);
+            complete();
+          },
+          onError: () => {
+            clearTimeout(turnTimeout);
+            complete();
+          },
           onFrequencies: (freqs) => {
             if (playbackSessionRef.current === sessionId) {
               setLiveFrequencies(freqs);

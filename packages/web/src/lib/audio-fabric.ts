@@ -132,39 +132,65 @@ export class BrowserAudioFabric {
       utterance.voice = matchedVoice;
     }
 
-    // Web Audio spatial resonance & frequency monitoring
+    // Web Audio spatial resonance & live acoustic carrier pipeline
     const tier = options?.tier ?? 0;
     const ctx = this.getAudioContext();
     let analyser: AnalyserNode | null = null;
     let freqData: Uint8Array | null = null;
+    let oscNode: OscillatorNode | null = null;
+    let gainNode: GainNode | null = null;
 
-    if (ctx && (tier === 1 || tier === 2)) {
+    if (ctx && targetVolume > 0) {
       try {
         analyser = ctx.createAnalyser();
         analyser.fftSize = 64;
         analyser.smoothingTimeConstant = 0.8;
         freqData = new Uint8Array(analyser.frequencyBinCount);
 
-        const formantFilter = ctx.createBiquadFilter();
-        formantFilter.type = 'peaking';
-        formantFilter.frequency.value = persona.formants[0] || 500;
-        formantFilter.Q.value = 2.5;
-        formantFilter.gain.value = 6;
+        // Acoustic carrier for spatial presence & formant reinforcement
+        const baseFreq = (persona.preferredGender === 'female' ? 210 : 130) * persona.pitch;
+        oscNode = ctx.createOscillator();
+        oscNode.type = tier === 2 ? 'triangle' : 'sine';
+        oscNode.frequency.setValueAtTime(baseFreq, ctx.currentTime);
 
+        const formantFilter = ctx.createBiquadFilter();
+        formantFilter.type = 'bandpass';
+        formantFilter.frequency.setValueAtTime(persona.formants[0] || 500, ctx.currentTime);
+        formantFilter.Q.setValueAtTime(2.5, ctx.currentTime);
+
+        const formantFilter2 = ctx.createBiquadFilter();
+        formantFilter2.type = 'peaking';
+        formantFilter2.frequency.setValueAtTime(persona.formants[1] || 1500, ctx.currentTime);
+        formantFilter2.Q.setValueAtTime(1.8, ctx.currentTime);
+        formantFilter2.gain.setValueAtTime(3.5, ctx.currentTime);
+
+        let spatialNode: AudioNode = formantFilter2;
         if (ctx.createStereoPanner) {
           const panner = ctx.createStereoPanner();
-          panner.pan.value = persona.stereoPan;
-          formantFilter.connect(panner);
-          panner.connect(analyser);
-        } else {
-          formantFilter.connect(analyser);
+          panner.pan.setValueAtTime(persona.stereoPan, ctx.currentTime);
+          formantFilter2.connect(panner);
+          spatialNode = panner;
         }
+
+        gainNode = ctx.createGain();
+        const acousticVolume = targetVolume > 0 ? (tier > 0 ? 0.045 : 0.025) : 0.0001;
+        gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, acousticVolume), ctx.currentTime + 0.05);
+
+        oscNode.connect(formantFilter);
+        formantFilter.connect(formantFilter2);
+        spatialNode.connect(analyser);
+        analyser.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        oscNode.start();
       } catch {
-        // Fallback gracefully
+        // Fallback gracefully if Web Audio is restricted
       }
     }
 
     let isSpeaking = false;
+    let safetyTimerId: any = null;
 
     // Chrome 15s freeze workaround: periodically resume speechSynthesis
     if (this.resumeTimerId) clearInterval(this.resumeTimerId);
@@ -175,6 +201,37 @@ export class BrowserAudioFabric {
       }
     }, 12000);
 
+    const cleanup = () => {
+      isSpeaking = false;
+      if (safetyTimerId) {
+        clearTimeout(safetyTimerId);
+        safetyTimerId = null;
+      }
+      if (oscNode && ctx) {
+        try {
+          if (gainNode) {
+            gainNode.gain.setValueAtTime(gainNode.gain.value, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.06);
+          }
+          oscNode.stop(ctx.currentTime + 0.08);
+        } catch {
+          // Safe ignore on audio node stop
+        }
+        oscNode = null;
+        gainNode = null;
+      }
+      if (this.animFrameId) {
+        window.cancelAnimationFrame(this.animFrameId);
+        this.animFrameId = null;
+      }
+      if (this.resumeTimerId) {
+        clearInterval(this.resumeTimerId);
+        this.resumeTimerId = null;
+      }
+      this.activeUtterance = null;
+      options?.onFrequencies?.(Array(16).fill(0.08));
+    };
+
     const startFrequencyLoop = () => {
       isSpeaking = true;
       const startTime = Date.now();
@@ -184,15 +241,26 @@ export class BrowserAudioFabric {
         let freqs: number[];
         if (analyser && freqData) {
           analyser.getByteFrequencyData(freqData as any);
-          freqs = [];
-          const step = Math.max(1, Math.floor(freqData.length / 16));
-          for (let i = 0; i < 16; i++) {
-            const rawVal = freqData[i * step] || 0;
-            const norm = Math.max(0.08, Math.min(1.0, rawVal / 255));
-            freqs.push(parseFloat(norm.toFixed(2)));
+          let sum = 0;
+          for (let i = 0; i < freqData.length; i++) sum += freqData[i];
+
+          if (sum > 5) {
+            freqs = [];
+            const step = Math.max(1, Math.floor(freqData.length / 16));
+            for (let i = 0; i < 16; i++) {
+              const rawVal = freqData[i * step] || 0;
+              const norm = Math.max(0.08, Math.min(1.0, rawVal / 255));
+              freqs.push(parseFloat(norm.toFixed(2)));
+            }
+          } else {
+            // Formant-tuned speech frequency generation fallback
+            freqs = VoiceModelLoadBalancer.generateSpeechFrequencies(16, targetVolume > 0 ? 0.85 : 0.15, {
+              persona,
+              timestampMs: Date.now() - startTime,
+              active: targetVolume > 0,
+            });
           }
         } else {
-          // Formant-tuned speech frequency generation
           freqs = VoiceModelLoadBalancer.generateSpeechFrequencies(16, targetVolume > 0 ? 0.85 : 0.15, {
             persona,
             timestampMs: Date.now() - startTime,
@@ -206,24 +274,20 @@ export class BrowserAudioFabric {
       this.animFrameId = window.requestAnimationFrame(loop);
     };
 
+    // Calculate word-based safety duration so playback NEVER hangs if speech synthesis fails to fire onend
+    const wordCount = text.trim().split(/\s+/).length;
+    const estimatedDurationMs = Math.max(1500, (wordCount / (100 * baseRate)) * 60 * 1000) + 2500;
+    safetyTimerId = setTimeout(() => {
+      if (this.currentSessionId === sessionId) {
+        cleanup();
+        options?.onEnd?.();
+      }
+    }, estimatedDurationMs);
+
     utterance.onstart = () => {
       if (this.currentSessionId !== sessionId) return;
       startFrequencyLoop();
       options?.onStart?.();
-    };
-
-    const cleanup = () => {
-      isSpeaking = false;
-      if (this.animFrameId) {
-        window.cancelAnimationFrame(this.animFrameId);
-        this.animFrameId = null;
-      }
-      if (this.resumeTimerId) {
-        clearInterval(this.resumeTimerId);
-        this.resumeTimerId = null;
-      }
-      this.activeUtterance = null;
-      options?.onFrequencies?.(Array(16).fill(0.08));
     };
 
     utterance.onend = () => {

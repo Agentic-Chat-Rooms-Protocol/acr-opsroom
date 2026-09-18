@@ -76,5 +76,10 @@ describe('OpsCanvasManager & HuddleManager', () => {
     assert.ok(newActionItems.length > 0);
     assert.equal(huddle.status, 'summarized');
     assert.ok(incident.canvas.summaryMarkdown.includes('Synthetic Huddle Executive Brief'));
+
+    // Second call should update cleanly without duplicate headers
+    HuddleManager.synthesizeAndSyncToCanvas(huddle, incident.canvas);
+    const matches = incident.canvas.summaryMarkdown.match(/### Synthetic Huddle Executive Brief/g);
+    assert.equal(matches?.length, 1, 'Should contain exactly one header after repeated synthesis');
   });
 });

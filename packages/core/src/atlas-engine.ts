@@ -9,7 +9,7 @@
  * - Dynamic Byzantine consensus gating before any mutation
  */
 
-import crypto from 'node:crypto';
+import { hmacSha256Sync, sha256Sync } from './crypto-compat.js';
 import { 
   OpsIncident, 
   DeliberationPhase, 
@@ -102,6 +102,32 @@ export class Atlas2Engine {
     incident: OpsIncident, 
     targetStatus: IncidentStatus
   ): StateTransitionEvent {
+    if (incident.status === targetStatus) {
+      return {
+        fromPhase: this.mapStatusToPhase(incident.status),
+        toPhase: this.mapStatusToPhase(targetStatus),
+        reason: `Atlas 2.0 already in phase ${targetStatus}`,
+        timestamp: Date.now(),
+      };
+    }
+
+    const validTransitions: Record<IncidentStatus, IncidentStatus[]> = {
+      detecting: ['detecting', 'deliberating', 'awaiting_quorum', 'escalated_human', 'aborted'],
+      deliberating: ['deliberating', 'awaiting_quorum', 'executing', 'escalated_human', 'aborted'],
+      awaiting_quorum: ['awaiting_quorum', 'executing', 'escalated_human', 'deliberating', 'aborted'],
+      executing: ['executing', 'verifying', 'resolved', 'mitigated', 'escalated_human', 'aborted'],
+      verifying: ['verifying', 'resolved', 'mitigated', 'deliberating', 'escalated_human', 'aborted'],
+      resolved: ['resolved', 'detecting', 'deliberating', 'aborted'],
+      mitigated: ['mitigated', 'deliberating', 'resolved', 'verifying', 'aborted'],
+      escalated_human: ['escalated_human', 'deliberating', 'awaiting_quorum', 'executing', 'aborted', 'resolved'],
+      aborted: ['aborted', 'detecting', 'deliberating'],
+    };
+
+    const allowed = validTransitions[incident.status];
+    if (allowed && !allowed.includes(targetStatus)) {
+      throw new Error(`Invalid Atlas 2.0 state transition: ${incident.status} -> ${targetStatus}`);
+    }
+
     const fromPhase = this.mapStatusToPhase(incident.status);
     const toPhase = this.mapStatusToPhase(targetStatus);
 
@@ -151,7 +177,7 @@ export class Atlas2Engine {
     const turnIndex = incident.deliberationTurns.length + 1;
     const now = Date.now();
     const payload = `${incident.id}:${turnIndex}:${agent.did}:${reasoning}:${confidence}:${now}`;
-    const signature = crypto.createHmac('sha256', agent.publicKey).update(payload).digest('hex');
+    const signature = hmacSha256Sync(agent.publicKey, payload);
 
     const turn: DeliberationTurn = {
       id: `turn-${turnIndex}-${Date.now()}`,
@@ -191,9 +217,7 @@ export class Atlas2Engine {
     for (const turn of incident.deliberationTurns) {
       for (const action of turn.proposedActions) {
         const stepId = `step-${stepNumber}-${Date.now()}`;
-        const auditHash = crypto.createHash('sha256')
-          .update(`${stepId}:${action.toolName}:${JSON.stringify(action.parameters)}`)
-          .digest('hex');
+        const auditHash = sha256Sync(`${stepId}:${action.toolName}:${JSON.stringify(action.parameters)}`);
 
         steps.push({
           id: stepId,

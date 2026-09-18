@@ -205,31 +205,44 @@ export const App: React.FC = () => {
 
   // Authorize Sandboxed Execution
   const handleExecutePlan = useCallback(async () => {
-    if (!currentIncident.executionPlan) return;
+    if (!currentIncident.executionPlan || isExecuting) return;
 
     setIsExecuting(true);
-    Atlas2Engine.transitionPhase(currentIncident, 'executing');
-    setCurrentIncident({ ...currentIncident });
+    try {
+      Atlas2Engine.transitionPhase(currentIncident, 'executing');
+      setCurrentIncident({ ...currentIncident });
 
-    const executor = new SandboxExecutor();
-    const result = await executor.executePlan(currentIncident.executionPlan, humanApproved);
+      const executor = new SandboxExecutor();
+      const result = await executor.executePlan(currentIncident.executionPlan, humanApproved);
 
-    if (result.allSucceeded) {
-      Atlas2Engine.transitionPhase(currentIncident, 'resolved');
-      currentIncident.resolvedAt = Date.now();
-      OpsCanvasManager.updateLiveFields(currentIncident.canvas, {
-        trafficImpactPercent: 0,
-        errorRateSpike: 0.02,
-      });
-      // Mark action items verified
-      for (const item of currentIncident.canvas.actionItems) {
-        item.status = 'verified';
+      if (result.allSucceeded) {
+        Atlas2Engine.transitionPhase(currentIncident, 'verifying');
+        setCurrentIncident({ ...currentIncident });
+        await new Promise((r) => setTimeout(r, 400));
+
+        Atlas2Engine.transitionPhase(currentIncident, 'resolved');
+        currentIncident.resolvedAt = Date.now();
+        OpsCanvasManager.updateLiveFields(currentIncident.canvas, {
+          trafficImpactPercent: 0,
+          errorRateSpike: 0.02,
+        });
+        // Mark action items verified
+        for (const item of currentIncident.canvas.actionItems) {
+          item.status = 'verified';
+        }
+      } else {
+        Atlas2Engine.transitionPhase(currentIncident, 'escalated_human');
       }
+    } catch (err) {
+      console.error('Failed executing sandboxed mitigation plan:', err);
+      try {
+        Atlas2Engine.transitionPhase(currentIncident, 'escalated_human');
+      } catch {}
+    } finally {
+      setIsExecuting(false);
+      setCurrentIncident({ ...currentIncident });
     }
-
-    setIsExecuting(false);
-    setCurrentIncident({ ...currentIncident });
-  }, [currentIncident, humanApproved]);
+  }, [currentIncident, humanApproved, isExecuting]);
 
   // Export SOC2 Audit Certificate
   const handleExportCertificate = () => {
@@ -317,6 +330,7 @@ export const App: React.FC = () => {
                 onToggleHumanApproval={() => setHumanApproved(!humanApproved)}
                 onExecutePlan={handleExecutePlan}
                 isExecuting={isExecuting}
+                incidentStatus={currentIncident.status}
               />
             </div>
 

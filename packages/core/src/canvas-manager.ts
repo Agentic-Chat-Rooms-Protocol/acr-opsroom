@@ -7,7 +7,7 @@
  * - Dynamic executive summary compilation
  */
 
-import crypto from 'node:crypto';
+import { sha256Sync } from './crypto-compat.js';
 import { OpsCanvas, CanvasActionItem, IncidentStatus, AgentRole } from './types.js';
 
 export class OpsCanvasManager {
@@ -82,7 +82,7 @@ export class OpsCanvasManager {
       summaryMarkdown: canvas.summaryMarkdown,
     });
 
-    const hash = crypto.createHash('sha256').update(statePayload).digest('hex');
+    const hash = sha256Sync(statePayload);
     canvas.auditMerkleRoot = hash;
     return hash;
   }

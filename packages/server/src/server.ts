@@ -334,24 +334,33 @@ export class OpsRoomServer {
             }
 
             const plan = incident.executionPlan || Atlas2Engine.compileExecutionPlan(incident, 'Incident Mitigation');
+            Atlas2Engine.transitionPhase(incident, 'executing');
+            this.broadcastEvent('EXECUTION_STARTED', { incidentId, status: incident.status });
+
             const execResult = await this.sandboxExecutor.executePlan(plan, humanApproved);
 
             if (execResult.allSucceeded) {
+              Atlas2Engine.transitionPhase(incident, 'verifying');
               Atlas2Engine.transitionPhase(incident, 'resolved');
               incident.resolvedAt = Date.now();
               OpsCanvasManager.updateLiveFields(incident.canvas, {
                 trafficImpactPercent: 0,
                 errorRateSpike: 0.05,
               });
+              for (const item of incident.canvas.actionItems) {
+                item.status = 'verified';
+              }
+            } else {
+              Atlas2Engine.transitionPhase(incident, 'escalated_human');
             }
 
             const ledger = this.ledgers.get(incident.id);
             ledger?.recordBlock(incident.id, 'STEP_EXECUTION', { receipts: execResult.receipts });
 
-            this.broadcastEvent('EXECUTION_COMPLETED', { incidentId, execResult, canvas: incident.canvas });
+            this.broadcastEvent('EXECUTION_COMPLETED', { incidentId, execResult, canvas: incident.canvas, status: incident.status });
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ execResult, canvas: incident.canvas }));
+            res.end(JSON.stringify({ execResult, canvas: incident.canvas, status: incident.status }));
             return;
           }
 

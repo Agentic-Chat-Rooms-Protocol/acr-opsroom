@@ -1,6 +1,6 @@
 import React from 'react';
-import { CheckCircle, XCircle, AlertOctagon, UserCheck, ShieldCheck, Lock } from 'lucide-react';
-import { ConsensusBallot, QuorumEvaluation } from '@acr-js/opsroom-core';
+import { CheckCircle, XCircle, AlertOctagon, UserCheck, ShieldCheck, Lock, Play, Loader2 } from 'lucide-react';
+import { ConsensusBallot, QuorumEvaluation, IncidentStatus } from '@acr-js/opsroom-core';
 import { truncateHash } from '../lib/utils.js';
 
 interface ConsensusBallotBoxProps {
@@ -10,6 +10,7 @@ interface ConsensusBallotBoxProps {
   onToggleHumanApproval: () => void;
   onExecutePlan: () => void;
   isExecuting: boolean;
+  incidentStatus?: IncidentStatus;
 }
 
 export const ConsensusBallotBox: React.FC<ConsensusBallotBoxProps> = ({
@@ -19,6 +20,7 @@ export const ConsensusBallotBox: React.FC<ConsensusBallotBoxProps> = ({
   onToggleHumanApproval,
   onExecutePlan,
   isExecuting,
+  incidentStatus,
 }) => {
   const approvalPercent = quorum ? Math.round(quorum.weightedApprovalRatio * 100) : 0;
   const thresholdPercent = quorum ? Math.round(quorum.weightedQuorumTarget * 100) : 67;
@@ -137,15 +139,38 @@ export const ConsensusBallotBox: React.FC<ConsensusBallotBoxProps> = ({
 
         <button
           onClick={onExecutePlan}
-          disabled={!isQuorumMet || isExecuting}
-          className={`touch-target w-full py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-            isQuorumMet 
-              ? 'bg-[#10b981] hover:bg-[#059669] text-black shadow-lg shadow-[#10b981]/20 cursor-pointer'
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+          disabled={!isQuorumMet || isExecuting || incidentStatus === 'resolved'}
+          className={`touch-target w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            incidentStatus === 'resolved'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default'
+              : isExecuting
+              ? 'bg-cyan-500/30 text-cyan-200 border border-cyan-400 animate-pulse'
+              : isQuorumMet 
+              ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 shadow-lg shadow-cyan-500/20 active:scale-98'
+              : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'
           }`}
         >
-          <Lock className="w-3.5 h-3.5" aria-hidden="true" />
-          {isExecuting ? 'Executing In Sandbox...' : 'Authorize Sandboxed Execution'}
+          {incidentStatus === 'resolved' ? (
+            <>
+              <CheckCircle className="w-4 h-4 text-emerald-400" aria-hidden="true" />
+              <span>Mitigation Plan Executed &amp; Verified</span>
+            </>
+          ) : incidentStatus === 'verifying' ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+              <span>Verifying Telemetry &amp; Action Items...</span>
+            </>
+          ) : isExecuting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+              <span>Executing Inside ToolHive Sandbox...</span>
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4 fill-current" aria-hidden="true" />
+              <span>Authorize &amp; Execute Sandboxed Mitigation Plan</span>
+            </>
+          )}
         </button>
 
         {quorum?.merkleRootHash && (

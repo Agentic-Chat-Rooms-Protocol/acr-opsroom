@@ -5,7 +5,7 @@
  * OpsRoom demands an M-of-N weighted quorum signed by Ed25519 agent DIDs.
  */
 
-import crypto from 'node:crypto';
+import { sha256Sync, hmacSha256Sync, timingSafeEqualHex } from './crypto-compat.js';
 import { 
   ConsensusBallot, 
   QuorumEvaluation, 
@@ -30,15 +30,8 @@ export class ByzantineConsensusEngine {
     // Verify cryptographic HMAC-SHA256 signature using agent's public key
     try {
       const payload = `${ballot.incidentId}:${ballot.did}:${ballot.decision}:${ballot.confidence}:${ballot.justification}:${ballot.timestamp}`;
-      const expectedSig = crypto.createHmac('sha256', agent.publicKey).update(payload).digest('hex');
-      
-      const sigBuf = Buffer.from(ballot.signature, 'hex');
-      const expBuf = Buffer.from(expectedSig, 'hex');
-
-      if (sigBuf.length !== expBuf.length || sigBuf.length === 0) {
-        return false;
-      }
-      return crypto.timingSafeEqual(sigBuf, expBuf);
+      const expectedSig = hmacSha256Sync(agent.publicKey, payload);
+      return timingSafeEqualHex(ballot.signature, expectedSig);
     } catch {
       return false;
     }
@@ -155,11 +148,11 @@ export class ByzantineConsensusEngine {
 
     // Compute Merkle root hash of ballots
     const sortedHashes = ballots
-      .map(b => crypto.createHash('sha256').update(JSON.stringify(b)).digest('hex'))
+      .map(b => sha256Sync(JSON.stringify(b)))
       .sort();
     
     const combinedHashString = sortedHashes.join(':');
-    const merkleRootHash = crypto.createHash('sha256').update(combinedHashString).digest('hex');
+    const merkleRootHash = sha256Sync(combinedHashString);
 
     let status: QuorumEvaluation['status'] = 'insufficient_quorum';
 
@@ -202,7 +195,7 @@ export class ByzantineConsensusEngine {
   ): ConsensusBallot {
     const timestamp = Date.now();
     const payload = `${incidentId}:${agent.did}:${decision}:${confidence}:${justification}:${timestamp}`;
-    const signature = crypto.createHmac('sha256', agent.publicKey).update(payload).digest('hex');
+    const signature = hmacSha256Sync(agent.publicKey, payload);
 
     return {
       ballotId: `ballot-${agent.id}-${timestamp}`,

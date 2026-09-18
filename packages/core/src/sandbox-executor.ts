@@ -4,7 +4,7 @@
  * Enforces dual-consent policy gating, isolated containment profiles, and execution receipts.
  */
 
-import crypto from 'node:crypto';
+import { sha256Sync } from './crypto-compat.js';
 import { ExecutionStep, ExecutionPlan, SandboxProfile } from './types.js';
 
 export interface ExecutionReceipt {
@@ -75,7 +75,7 @@ export class SandboxExecutor {
     step.status = isDestructive ? 'failed' : 'completed';
 
     const payloadToSign = `${step.id}:${step.toolName}:${JSON.stringify(outputData)}:${durationMs}:${startTime}`;
-    const cryptographicReceipt = crypto.createHash('sha256').update(payloadToSign).digest('hex');
+    const cryptographicReceipt = sha256Sync(payloadToSign);
     step.auditHash = cryptographicReceipt;
 
     return {
