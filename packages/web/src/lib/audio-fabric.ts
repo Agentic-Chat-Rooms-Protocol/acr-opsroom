@@ -33,6 +33,9 @@ export class BrowserAudioFabric {
   private static audioCtx: AudioContext | null = null;
   private static currentSessionId: number = 0;
   private static resumeTimerId: any = null;
+  private static activeOscNode: OscillatorNode | null = null;
+  private static activeGainNode: GainNode | null = null;
+  private static activeSafetyTimerId: any = null;
 
   public static initVoices(): void {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -173,9 +176,7 @@ export class BrowserAudioFabric {
         }
 
         gainNode = ctx.createGain();
-        const acousticVolume = targetVolume > 0 ? (tier > 0 ? 0.045 : 0.025) : 0.0001;
         gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, acousticVolume), ctx.currentTime + 0.05);
 
         oscNode.connect(formantFilter);
         formantFilter.connect(formantFilter2);
@@ -184,13 +185,14 @@ export class BrowserAudioFabric {
         gainNode.connect(ctx.destination);
 
         oscNode.start();
+        this.activeOscNode = oscNode;
+        this.activeGainNode = gainNode;
       } catch {
         // Fallback gracefully if Web Audio is restricted
       }
     }
 
     let isSpeaking = false;
-    let safetyTimerId: any = null;
 
     // Chrome 15s freeze workaround: periodically resume speechSynthesis
     if (this.resumeTimerId) clearInterval(this.resumeTimerId);
@@ -203,20 +205,22 @@ export class BrowserAudioFabric {
 
     const cleanup = () => {
       isSpeaking = false;
-      if (safetyTimerId) {
-        clearTimeout(safetyTimerId);
-        safetyTimerId = null;
+      if (this.activeSafetyTimerId) {
+        clearTimeout(this.activeSafetyTimerId);
+        this.activeSafetyTimerId = null;
       }
       if (oscNode && ctx) {
         try {
           if (gainNode) {
             gainNode.gain.setValueAtTime(gainNode.gain.value, ctx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.06);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.04);
           }
-          oscNode.stop(ctx.currentTime + 0.08);
+          oscNode.stop(ctx.currentTime + 0.05);
         } catch {
           // Safe ignore on audio node stop
         }
+        if (this.activeOscNode === oscNode) this.activeOscNode = null;
+        if (this.activeGainNode === gainNode) this.activeGainNode = null;
         oscNode = null;
         gainNode = null;
       }
@@ -238,34 +242,21 @@ export class BrowserAudioFabric {
       const loop = () => {
         if (!isSpeaking || this.currentSessionId !== sessionId) return;
 
+        const formantFreqs = VoiceModelLoadBalancer.generateSpeechFrequencies(16, targetVolume > 0 ? 0.85 : 0.15, {
+          persona,
+          timestampMs: Date.now() - startTime,
+          active: isSpeaking && targetVolume > 0,
+        });
+
         let freqs: number[];
         if (analyser && freqData) {
           analyser.getByteFrequencyData(freqData as any);
           let sum = 0;
           for (let i = 0; i < freqData.length; i++) sum += freqData[i];
-
-          if (sum > 5) {
-            freqs = [];
-            const step = Math.max(1, Math.floor(freqData.length / 16));
-            for (let i = 0; i < 16; i++) {
-              const rawVal = freqData[i * step] || 0;
-              const norm = Math.max(0.08, Math.min(1.0, rawVal / 255));
-              freqs.push(parseFloat(norm.toFixed(2)));
-            }
-          } else {
-            // Formant-tuned speech frequency generation fallback
-            freqs = VoiceModelLoadBalancer.generateSpeechFrequencies(16, targetVolume > 0 ? 0.85 : 0.15, {
-              persona,
-              timestampMs: Date.now() - startTime,
-              active: targetVolume > 0,
-            });
-          }
+          const energyFactor = Math.min(1.4, Math.max(0.6, (sum / 64) * 0.8 + 0.5));
+          freqs = formantFreqs.map((f) => parseFloat(Math.max(0.08, Math.min(1.0, f * energyFactor)).toFixed(2)));
         } else {
-          freqs = VoiceModelLoadBalancer.generateSpeechFrequencies(16, targetVolume > 0 ? 0.85 : 0.15, {
-            persona,
-            timestampMs: Date.now() - startTime,
-            active: targetVolume > 0,
-          });
+          freqs = formantFreqs;
         }
 
         options?.onFrequencies?.(freqs);
@@ -277,7 +268,7 @@ export class BrowserAudioFabric {
     // Calculate word-based safety duration so playback NEVER hangs if speech synthesis fails to fire onend
     const wordCount = text.trim().split(/\s+/).length;
     const estimatedDurationMs = Math.max(1500, (wordCount / (100 * baseRate)) * 60 * 1000) + 2500;
-    safetyTimerId = setTimeout(() => {
+    this.activeSafetyTimerId = setTimeout(() => {
       if (this.currentSessionId === sessionId) {
         cleanup();
         options?.onEnd?.();
@@ -286,6 +277,11 @@ export class BrowserAudioFabric {
 
     utterance.onstart = () => {
       if (this.currentSessionId !== sessionId) return;
+      if (gainNode && ctx && targetVolume > 0) {
+        const acousticVolume = tier > 0 ? 0.04 : 0.02;
+        gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, acousticVolume), ctx.currentTime + 0.05);
+      }
       startFrequencyLoop();
       options?.onStart?.();
     };
@@ -314,6 +310,23 @@ export class BrowserAudioFabric {
 
   private static stopInternal(): void {
     if (typeof window === 'undefined') return;
+    if (this.activeSafetyTimerId) {
+      clearTimeout(this.activeSafetyTimerId);
+      this.activeSafetyTimerId = null;
+    }
+    if (this.activeOscNode && this.audioCtx) {
+      try {
+        if (this.activeGainNode) {
+          this.activeGainNode.gain.setValueAtTime(this.activeGainNode.gain.value, this.audioCtx.currentTime);
+          this.activeGainNode.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.04);
+        }
+        this.activeOscNode.stop(this.audioCtx.currentTime + 0.05);
+      } catch {
+        // Safe catch
+      }
+      this.activeOscNode = null;
+      this.activeGainNode = null;
+    }
     if (this.animFrameId) {
       window.cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;

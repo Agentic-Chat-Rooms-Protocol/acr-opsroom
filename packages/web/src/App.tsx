@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ShaderBackground } from './components/ShaderBackground.js';
 import { Header } from './components/Header.js';
 import { HeroSection } from './components/HeroSection.js';
@@ -38,14 +38,27 @@ export const App: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<IncidentPreset>(INCIDENT_PRESETS[0]);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
+  const isExecutingRef = useRef(false);
+
   // Active Incident State
   const [currentIncident, setCurrentIncident] = useState<OpsIncident>(() => {
     const squad = MLIncidentRouter.createDefaultSquad('squad-sre-core');
-    return Atlas2Engine.createIncident(
+    const inc = Atlas2Engine.createIncident(
       INCIDENT_PRESETS[0].title,
       INCIDENT_PRESETS[0].description,
       squad
     );
+    inc.severity = INCIDENT_PRESETS[0].severity;
+    const huddle = HuddleManager.startHuddle(inc.id, squad.agents);
+    const agentSre = squad.agents[1];
+    const agentSec = squad.agents[2];
+    const agentAtlas = squad.agents[0];
+    HuddleManager.addSpokenLine(huddle, agentSre, 'Anomaly matches known replication stall signature. Node isolation recommended before WAL wrap.');
+    HuddleManager.addSpokenLine(huddle, agentSec, 'SecOps confirmed egress allowlist locked. Ready for consensus ballot.');
+    HuddleManager.addSpokenLine(huddle, agentAtlas, 'Goal decomposition complete. Requesting 67% Byzantine Quorum vote.');
+    inc.huddle = huddle;
+    HuddleManager.synthesizeAndSyncToCanvas(huddle, inc.canvas);
+    return inc;
   });
 
   const [isRunning, setIsRunning] = useState(false);
@@ -80,15 +93,26 @@ export const App: React.FC = () => {
   }, []);
 
   // Reset war room state
-  const handleReset = useCallback(() => {
+  const handleReset = useCallback((overridePreset?: IncidentPreset) => {
+    const targetPreset = overridePreset || selectedPreset;
     const squad = MLIncidentRouter.createDefaultSquad(
-      selectedPreset.category === 'SecOps & Zero-Trust' ? 'squad-secops-defense' : 'squad-sre-core'
+      targetPreset.category === 'SecOps & Zero-Trust' ? 'squad-secops-defense' : 'squad-sre-core'
     );
-    const inc = Atlas2Engine.createIncident(selectedPreset.title, selectedPreset.description, squad);
-    inc.severity = selectedPreset.severity;
+    const inc = Atlas2Engine.createIncident(targetPreset.title, targetPreset.description, squad);
+    inc.severity = targetPreset.severity;
+    const huddle = HuddleManager.startHuddle(inc.id, squad.agents);
+    const agentSre = squad.agents[1];
+    const agentSec = squad.agents[2];
+    const agentAtlas = squad.agents[0];
+    HuddleManager.addSpokenLine(huddle, agentSre, 'Anomaly matches known replication stall signature. Node isolation recommended before WAL wrap.');
+    HuddleManager.addSpokenLine(huddle, agentSec, 'SecOps confirmed egress allowlist locked. Ready for consensus ballot.');
+    HuddleManager.addSpokenLine(huddle, agentAtlas, 'Goal decomposition complete. Requesting 67% Byzantine Quorum vote.');
+    inc.huddle = huddle;
+    HuddleManager.synthesizeAndSyncToCanvas(huddle, inc.canvas);
     setCurrentIncident(inc);
     setIsRunning(false);
     setHumanApproved(false);
+    isExecutingRef.current = false;
     setIsExecuting(false);
   }, [selectedPreset]);
 
@@ -175,6 +199,11 @@ export const App: React.FC = () => {
       ],
       0.98
     );
+    HuddleManager.addSpokenLine(
+      huddle,
+      agent0,
+      'Goal decomposition completed. Synthesized 2-step mitigation DAG. Summoning Byzantine Quorum vote.'
+    );
     setCurrentIncident({ ...inc });
     await new Promise(r => setTimeout(r, 600));
 
@@ -205,15 +234,17 @@ export const App: React.FC = () => {
 
   // Authorize Sandboxed Execution
   const handleExecutePlan = useCallback(async () => {
-    if (!currentIncident.executionPlan || isExecuting) return;
+    if (!currentIncident.executionPlan || isExecutingRef.current) return;
 
+    isExecutingRef.current = true;
     setIsExecuting(true);
+    setHumanApproved(true);
     try {
       Atlas2Engine.transitionPhase(currentIncident, 'executing');
       setCurrentIncident({ ...currentIncident });
 
       const executor = new SandboxExecutor();
-      const result = await executor.executePlan(currentIncident.executionPlan, humanApproved);
+      const result = await executor.executePlan(currentIncident.executionPlan, true);
 
       if (result.allSucceeded) {
         Atlas2Engine.transitionPhase(currentIncident, 'verifying');
@@ -239,10 +270,11 @@ export const App: React.FC = () => {
         Atlas2Engine.transitionPhase(currentIncident, 'escalated_human');
       } catch {}
     } finally {
+      isExecutingRef.current = false;
       setIsExecuting(false);
       setCurrentIncident({ ...currentIncident });
     }
-  }, [currentIncident, humanApproved, isExecuting]);
+  }, [currentIncident]);
 
   // Export SOC2 Audit Certificate
   const handleExportCertificate = () => {
@@ -309,11 +341,11 @@ export const App: React.FC = () => {
               selectedPreset={selectedPreset}
               onSelectPreset={(preset) => {
                 setSelectedPreset(preset);
-                handleReset();
+                handleReset(preset);
               }}
               onTriggerIncident={handleTriggerIncident}
               isRunning={isRunning}
-              onReset={handleReset}
+              onReset={() => handleReset()}
             />
 
             {/* Deliberation Feed & Consensus Ballot Box (Side-by-side) */}

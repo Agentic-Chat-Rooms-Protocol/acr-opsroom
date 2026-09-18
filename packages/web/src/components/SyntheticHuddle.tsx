@@ -113,6 +113,12 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
           setLiveFrequencies(Array(16).fill(0.08));
         }
       },
+      onError: () => {
+        if (playbackSessionRef.current === sessionId) {
+          setActiveTurnIndex(null);
+          setLiveFrequencies(Array(16).fill(0.08));
+        }
+      },
       onFrequencies: (freqs) => {
         if (playbackSessionRef.current === sessionId) {
           setLiveFrequencies(freqs);
@@ -217,6 +223,12 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
         }
       },
       onEnd: () => {
+        if (playbackSessionRef.current === sessionId) {
+          setIsPlayingBrief(false);
+          setLiveFrequencies(Array(16).fill(0.08));
+        }
+      },
+      onError: () => {
         if (playbackSessionRef.current === sessionId) {
           setIsPlayingBrief(false);
           setLiveFrequencies(Array(16).fill(0.08));
