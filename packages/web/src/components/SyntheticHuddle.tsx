@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Mic,
   Volume2,
@@ -62,6 +63,95 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
 
   // Audio session ref for monotonic cancellation & race-free sequencing
   const playbackSessionRef = useRef(0);
+
+  // Accessible Modal Management Refs
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
+  const engineModalRef = useRef<HTMLDivElement>(null);
+  const downloadModalRef = useRef<HTMLDivElement>(null);
+  const lastFocusedElementRef = useRef<HTMLElement | null>(null);
+
+  // Accessible Keyboard Dismissal (Escape) & Body Scroll Lock
+  useEffect(() => {
+    if (!isEngineModalOpen && pendingDownloadTier === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (pendingDownloadTier !== null) {
+          if (!downloadProgress.isDownloading) {
+            setPendingDownloadTier(null);
+          }
+        } else if (isEngineModalOpen) {
+          setIsEngineModalOpen(false);
+        }
+      }
+    };
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isEngineModalOpen, pendingDownloadTier, downloadProgress.isDownloading]);
+
+  // Focus management: focus modal on open & restore focus to trigger on close
+  useEffect(() => {
+    if (isEngineModalOpen) {
+      lastFocusedElementRef.current = document.activeElement as HTMLElement | null;
+      const timer = setTimeout(() => {
+        const firstFocusable = engineModalRef.current?.querySelector<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        firstFocusable?.focus();
+      }, 50);
+      return () => {
+        clearTimeout(timer);
+        lastFocusedElementRef.current?.focus();
+      };
+    }
+  }, [isEngineModalOpen]);
+
+  useEffect(() => {
+    if (pendingDownloadTier !== null) {
+      const timer = setTimeout(() => {
+        const firstFocusable = downloadModalRef.current?.querySelector<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        firstFocusable?.focus();
+      }, 50);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [pendingDownloadTier]);
+
+  // Tab key trap inside active modal dialog
+  const handleModalTabTrap = (
+    e: React.KeyboardEvent<HTMLDivElement>,
+    modalRef: React.RefObject<HTMLDivElement | null>
+  ) => {
+    if (e.key !== 'Tab' || !modalRef.current) return;
+    const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const firstElement = focusable[0];
+    const lastElement = focusable[focusable.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === firstElement) {
+        lastElement.focus();
+        e.preventDefault();
+      }
+    } else {
+      if (document.activeElement === lastElement) {
+        firstElement.focus();
+        e.preventDefault();
+      }
+    }
+  };
 
   // Initialize voices on mount
   useEffect(() => {
@@ -318,9 +408,12 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
 
             {/* Hardware-Aware Voice Tier Chip */}
             <button
+              ref={triggerButtonRef}
               onClick={() => setIsEngineModalOpen(true)}
               title="Click to configure Dynamic Hardware Load-Balancer & Local Models"
-              className="group text-[11px] px-2.5 py-1 rounded-full bg-slate-950/80 border border-cyan-500/30 text-cyan-300 hover:border-cyan-400 font-mono flex items-center gap-1.5 transition-all cursor-pointer hover:shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+              aria-haspopup="dialog"
+              aria-expanded={isEngineModalOpen}
+              className="group text-[11px] px-2.5 py-1 rounded-full bg-slate-950/80 border border-cyan-500/30 text-cyan-300 hover:border-cyan-400 font-mono flex items-center gap-1.5 transition-all cursor-pointer hover:shadow-[0_0_12px_rgba(6,182,212,0.25)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
               <Cpu className="w-3 h-3 text-cyan-400 group-hover:rotate-45 transition-transform" />
               <span>Tier {activeTier}: {activeSpec.name.split(' ')[0]}</span>
@@ -576,34 +669,45 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
       </div>
 
       {/* MODAL 1: Dynamic Hardware Profiler & Voice Model Load Balancer */}
-      {isEngineModalOpen && (
+      {isEngineModalOpen && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="engine-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+          aria-describedby="engine-modal-description"
+          onKeyDown={(e) => handleModalTabTrap(e, engineModalRef)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsEngineModalOpen(false);
+            }
+          }}
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fadeIn"
         >
-          <div className="w-full max-w-2xl bg-slate-950 border border-white/10 rounded-3xl p-6 shadow-2xl relative text-slate-200 ring-1 ring-white/10">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+          <div
+            ref={engineModalRef}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-950/95 border border-white/10 rounded-3xl p-6 sm:p-7 shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_30px_rgba(6,182,212,0.15)] relative text-slate-200 ring-1 ring-white/10 my-auto"
+          >
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                  <Cpu className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
+                  <Cpu className="w-4 h-4" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 id="engine-modal-title" className="text-base font-bold text-white">
+                  <h2 id="engine-modal-title" className="text-base sm:text-lg font-bold text-white tracking-tight">
                     Hardware-Aware Voice Model & Load Balancer Engine
-                  </h3>
-                  <p className="text-xs text-slate-400">
+                  </h2>
+                  <p id="engine-modal-description" className="text-xs text-slate-400">
                     Dynamic client-side hardware forecasting & on-device neural voice selection.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsEngineModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-                aria-label="Close modal"
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                aria-label="Close settings"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
@@ -642,8 +746,16 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                 return (
                   <div
                     key={t}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        requestTierSelection(t);
+                      }
+                    }}
                     onClick={() => requestTierSelection(t)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                       isSelected
                         ? 'bg-cyan-950/30 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/30'
                         : 'bg-slate-900/60 border-white/10 hover:border-white/20'
@@ -697,12 +809,12 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                           e.stopPropagation();
                           requestTierSelection(t);
                         }}
-                        className={`px-3 py-1 rounded-lg font-semibold text-xs transition-all ${
+                        className={`px-3 py-1.5 rounded-xl font-semibold text-xs transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98 ${
                           isSelected
-                            ? 'bg-cyan-500 text-slate-950 font-bold'
+                            ? 'bg-cyan-500 text-slate-950 font-bold shadow-md shadow-cyan-500/25'
                             : isDownloaded
                             ? 'bg-white/10 hover:bg-white/20 text-white'
-                            : 'bg-purple-600 hover:bg-purple-500 text-white'
+                            : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-500/20'
                         }`}
                       >
                         {isSelected ? 'Active' : isDownloaded ? 'Select' : `Confirm & Download (${spec.downloadSizeMb}MB)`}
@@ -713,37 +825,64 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               })}
             </div>
 
-            <div className="flex justify-end pt-2 border-t border-white/10">
+            <div className="flex items-center justify-between pt-3 border-t border-white/10">
+              <span className="text-[11px] text-slate-500 font-mono hidden sm:inline">
+                WebGPU / SIMD Neural Voice Fabric
+              </span>
               <button
                 onClick={() => setIsEngineModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-colors"
+                className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-all cursor-pointer border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98"
               >
                 Close Settings
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL 2: Explicit User Confirmation & Model Download Modal */}
-      {pendingDownloadTier !== null && (
+      {pendingDownloadTier !== null && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="confirm-download-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg"
+          aria-describedby="confirm-download-description"
+          onKeyDown={(e) => handleModalTabTrap(e, downloadModalRef)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !downloadProgress.isDownloading) {
+              setPendingDownloadTier(null);
+            }
+          }}
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fadeIn"
         >
-          <div className="w-full max-w-lg bg-slate-950 border border-white/15 rounded-3xl p-6 shadow-2xl relative text-slate-200 ring-1 ring-cyan-500/30">
-            <div className="flex items-center gap-3 pb-4 mb-4 border-b border-white/10">
-              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-                <Download className="w-5 h-5 animate-bounce" />
+          <div
+            ref={downloadModalRef}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-slate-950/95 border border-white/15 rounded-3xl p-6 sm:p-7 shadow-[0_0_60px_rgba(0,0,0,0.85),0_0_30px_rgba(6,182,212,0.2)] relative text-slate-200 ring-1 ring-cyan-500/30 my-auto"
+          >
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                  <Download className="w-5 h-5 animate-bounce" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 id="confirm-download-title" className="text-base sm:text-lg font-bold text-white tracking-tight">
+                    Explicit Local Model Download Confirmation
+                  </h2>
+                  <p id="confirm-download-description" className="text-xs text-slate-400">
+                    User consent required before transferring weights.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 id="confirm-download-title" className="text-base font-bold text-white">
-                  Explicit Local Model Download Confirmation
-                </h3>
-                <p className="text-xs text-slate-400">User consent required before transferring weights.</p>
-              </div>
+              <button
+                disabled={downloadProgress.isDownloading}
+                onClick={() => setPendingDownloadTier(null)}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                aria-label="Close dialog"
+              >
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
             </div>
 
             <div className="space-y-4 text-xs mb-6">
@@ -802,7 +941,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               <button
                 disabled={downloadProgress.isDownloading}
                 onClick={() => setPendingDownloadTier(null)}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
               >
                 Cancel / Keep Universal Native
               </button>
@@ -810,7 +949,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               <button
                 disabled={downloadProgress.isDownloading}
                 onClick={handleConfirmDownload}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-xs font-bold text-white shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-xs font-bold text-white shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98"
               >
                 {downloadProgress.isDownloading ? (
                   <>
@@ -826,7 +965,8 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );
