@@ -20,3 +20,4 @@ export * from './decisions/decision_log.js';
 export * from './playbooks/playbook_runner.js';
 export * from './pods/pod_controller.js';
 export * from './pods/pod_ranker.js';
+export * from './collab/index.js';
