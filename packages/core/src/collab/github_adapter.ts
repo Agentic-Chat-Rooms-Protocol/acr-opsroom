@@ -26,9 +26,18 @@ export interface GitHubPullRequest {
   state?: string;
   author?: { login: string };
   headRefName?: string;
+  head_ref_name?: string;
   baseRefName?: string;
   createdAt?: string;
+  mergeable?: string;
   url?: string;
+}
+
+export interface MergeOptions {
+  method?: MergeMethod;
+  auto?: boolean;
+  admin?: boolean;
+  deleteBranch?: boolean;
 }
 
 export interface GitHubOperationResult {
@@ -144,7 +153,7 @@ export class GitHubAdapter {
       '--repo',
       repo,
       '--json',
-      'number,title,state,author,headRefName,baseRefName,createdAt',
+      'number,title,state,author,headRefName,baseRefName,createdAt,mergeable',
     ];
     const res = await this.runner('gh', args, this.defaultOptions);
     if (res.exitCode !== 0) {
@@ -153,7 +162,14 @@ export class GitHubAdapter {
 
     try {
       const parsed = JSON.parse(res.stdout.trim() || '[]');
-      return Array.isArray(parsed) ? parsed : [];
+      if (Array.isArray(parsed)) {
+        return parsed.map((item: any) => ({
+          ...item,
+          head_ref_name: item.head_ref_name ?? item.headRefName,
+          headRefName: item.headRefName ?? item.head_ref_name,
+        }));
+      }
+      return [];
     } catch {
       return [];
     }
@@ -247,15 +263,22 @@ export class GitHubAdapter {
   }
 
   /**
-   * Merge a pull request using squash, merge, or rebase.
+   * Merge a pull request using squash, merge, or rebase, with optional auto/admin flags.
    */
   public async pr_merge(
     repo: string,
     number: number,
-    method: MergeMethod = 'squash'
+    methodOrOptions: MergeMethod | MergeOptions = 'squash'
   ): Promise<GitHubOperationResult> {
+    const opts: MergeOptions =
+      typeof methodOrOptions === 'string' ? { method: methodOrOptions } : methodOrOptions;
+    const method = opts.method ?? 'squash';
     const methodFlag = `--${method}`;
     const args = ['pr', 'merge', String(number), '--repo', repo, methodFlag];
+    if (opts.auto) args.push('--auto');
+    if (opts.admin) args.push('--admin');
+    if (opts.deleteBranch) args.push('--delete-branch');
+
     const res = await this.runner('gh', args, this.defaultOptions);
     if (res.exitCode !== 0) {
       throw new Error(`gh pr merge failed (code ${res.exitCode}): ${res.stderr || res.stdout}`);
@@ -271,8 +294,8 @@ export class GitHubAdapter {
   public async prMerge(
     repo: string,
     number: number,
-    method: MergeMethod = 'squash'
+    methodOrOptions: MergeMethod | MergeOptions = 'squash'
   ): Promise<GitHubOperationResult> {
-    return this.pr_merge(repo, number, method);
+    return this.pr_merge(repo, number, methodOrOptions);
   }
 }

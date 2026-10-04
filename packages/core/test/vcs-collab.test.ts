@@ -120,7 +120,7 @@ describe('VCS Collaboration - GitHubAdapter (gh CLI)', () => {
       '--repo',
       'agent-org/agent-repo',
       '--json',
-      'number,title,state,author,headRefName,baseRefName,createdAt',
+      'number,title,state,author,headRefName,baseRefName,createdAt,mergeable',
     ], {
       stdout: JSON.stringify([
         {
@@ -129,6 +129,7 @@ describe('VCS Collaboration - GitHubAdapter (gh CLI)', () => {
           state: 'OPEN',
           headRefName: 'feat/jj',
           baseRefName: 'main',
+          mergeable: 'MERGEABLE',
         },
       ]),
       exitCode: 0,
@@ -139,6 +140,8 @@ describe('VCS Collaboration - GitHubAdapter (gh CLI)', () => {
     assert.equal(prs.length, 1);
     assert.equal(prs[0].number, 12);
     assert.equal(prs[0].headRefName, 'feat/jj');
+    assert.equal(prs[0].head_ref_name, 'feat/jj');
+    assert.equal(prs[0].mergeable, 'MERGEABLE');
   });
 
   it('constructs exact argument vector for pr_create', async () => {
@@ -318,5 +321,30 @@ describe('VCS Collaboration - JujutsuAdapter (jj CLI)', () => {
       },
       /jj git push failed \(code 2\): Error: No git remote configured/
     );
+  });
+
+  it('constructs exact argument vector for log_changes and parses JujutsuChange records', async () => {
+    const fakeRunner = new FakeCommandRunner();
+    fakeRunner.defaultResponse = {
+      stdout: 'kpqw8910\tz7x8c9v0\ttrue\tfeat: autonomous patch\nx8c9v012\ta1b2c3d4\tfalse\tfix: nil pointer\n',
+      stderr: '',
+      exitCode: 0,
+    };
+
+    const adapter = new JujutsuAdapter(fakeRunner.run);
+    const changes = await adapter.log_changes(10);
+    assert.equal(changes.length, 2);
+    assert.equal(changes[0].change_id, 'kpqw8910');
+    assert.equal(changes[0].commit_id, 'z7x8c9v0');
+    assert.equal(changes[0].is_working_copy, true);
+    assert.equal(changes[0].description, 'feat: autonomous patch');
+    assert.equal(changes[1].change_id, 'x8c9v012');
+    assert.equal(changes[1].is_working_copy, false);
+    assert.equal(changes[1].description, 'fix: nil pointer');
+
+    assert.equal(fakeRunner.invocations[0].args[0], 'log');
+    assert.equal(fakeRunner.invocations[0].args[1], '-T');
+    assert.equal(fakeRunner.invocations[0].args[3], '-n');
+    assert.equal(fakeRunner.invocations[0].args[4], '10');
   });
 });
