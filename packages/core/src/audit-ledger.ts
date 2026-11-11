@@ -64,6 +64,21 @@ export class CryptographicAuditLedger {
   }
 
   /**
+   * Convenience helper to append a signed or system-attributed block to the ledger.
+   */
+  public appendBlock(
+    incidentId: string,
+    actionType: AuditBlock['actionType'],
+    actorDid: string,
+    payload: Record<string, unknown>,
+    signature = ''
+  ): AuditBlock {
+    return this.recordBlock(incidentId, actionType, payload, [
+      { did: actorDid, signature },
+    ]);
+  }
+
+  /**
    * Verify cryptographic integrity of the entire block chain.
    */
   public verifyChainIntegrity(): boolean {

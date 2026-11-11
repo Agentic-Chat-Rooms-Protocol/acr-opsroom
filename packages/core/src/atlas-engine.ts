@@ -22,6 +22,17 @@ import {
   ToolCallProposal
 } from './types.js';
 import { ByzantineConsensusEngine } from './consensus.js';
+import { ApprovalGate, ConsentChallengeStore } from './approvals/approval_engine.js';
+import { CryptographicAuditLedger } from './audit-ledger.js';
+import { DurableCommandWal } from './playbooks/playbook_runner.js';
+import { EdgeItem, OUTCOME_UNKNOWN_ROUTE } from './workflow/graph.js';
+import { FunctionNode } from './workflow/nodes/function_node.js';
+import {
+  Atlas2GraphWorkflow,
+  ByzantineQuorumNode,
+  WalBackedToolNode,
+} from './workflow/nodes/hyperfused_nodes.js';
+import { createEvent, ExecutionAuthorityLevel } from './workflow/shims.js';
 
 export interface StateTransitionEvent {
   fromPhase: DeliberationPhase;
@@ -270,5 +281,167 @@ export class Atlas2Engine {
 
     plan.dryRunValidated = passed;
     return { passed, simulationLog: log };
+  }
+
+  /**
+   * Compiles an {@link OpsIncident} and its synthesized {@link ExecutionPlan} into
+   * a cryptographically governed {@link Atlas2GraphWorkflow} DAG (ADK 2.0 + Extensions 1–5):
+   * - `START -> quorum_gate -> { approved: step_1 -> ... -> verify_resolution, rejected: abort_incident, escalated_human: human_escalation }`
+   * - Each execution step is wrapped in a `WalBackedToolNode` (when `wal` is supplied) or a
+   *   `FunctionNode`, with automatic `'__OUTCOME_UNKNOWN__'` quarantine routing.
+   */
+  public static compileExecutionGraph(
+    incident: OpsIncident,
+    targetGoal: string,
+    options?: {
+      wal?: DurableCommandWal;
+      approvalGate?: ApprovalGate;
+      challengeStore?: ConsentChallengeStore;
+      auditLedger?: CryptographicAuditLedger;
+      initialExecutionAuthority?: ExecutionAuthorityLevel;
+      stepDispatcher?: (
+        step: ExecutionStep,
+        idempotencyKey: string
+      ) => Promise<{ externalResourceId: string; result: Record<string, unknown> }>;
+    }
+  ): Atlas2GraphWorkflow {
+    const plan =
+      incident.executionPlan ?? this.compileExecutionPlan(incident, targetGoal);
+    const wal = options?.wal ?? new DurableCommandWal();
+
+    const quorumNode = new ByzantineQuorumNode({
+      name: 'quorum_gate',
+      incidentId: incident.id,
+      squad: incident.squad,
+      ballots: () => incident.ballots,
+      auditLedger: options?.auditLedger,
+    });
+
+    const abortNode = new FunctionNode('abort_incident', (ctx) => {
+      this.transitionPhase(incident, 'aborted');
+      return createEvent({
+        author: 'abort_incident',
+        invocationId: ctx.invocationId,
+        branch: ctx.branch,
+        output: {
+          incidentId: incident.id,
+          status: incident.status,
+          reason: 'Quorum rejected or insufficient',
+        },
+      });
+    });
+
+    const escalateNode = new FunctionNode('human_escalation', (ctx) => {
+      this.transitionPhase(incident, 'escalated_human');
+      return createEvent({
+        author: 'human_escalation',
+        invocationId: ctx.invocationId,
+        branch: ctx.branch,
+        output: {
+          incidentId: incident.id,
+          status: incident.status,
+          reason: 'Byzantine anomaly or human escalation required',
+        },
+      });
+    });
+
+    const quarantineNode = new FunctionNode('outcome_unknown_quarantine', (ctx, input) => {
+      this.transitionPhase(incident, 'escalated_human');
+      return createEvent({
+        author: 'outcome_unknown_quarantine',
+        invocationId: ctx.invocationId,
+        branch: ctx.branch,
+        output: {
+          incidentId: incident.id,
+          status: incident.status,
+          quarantined: true,
+          details: input,
+        },
+      });
+    });
+
+    const verifyNode = new FunctionNode('verify_resolution', (ctx) => {
+      this.transitionPhase(incident, 'resolved');
+      return createEvent({
+        author: 'verify_resolution',
+        invocationId: ctx.invocationId,
+        branch: ctx.branch,
+        output: {
+          incidentId: incident.id,
+          planId: plan.planId,
+          status: incident.status,
+          stepsCompleted: plan.steps.length,
+        },
+      });
+    });
+
+    const stepNodes = plan.steps.map((step) => {
+      return new WalBackedToolNode({
+        name: step.id,
+        wal,
+        stepId: step.id,
+        toolName: step.toolName,
+        dispatcher: async (_args, idempotencyKey) => {
+          step.status = 'executing';
+          if (options?.stepDispatcher) {
+            const out = await options.stepDispatcher(step, idempotencyKey);
+            step.status = 'completed';
+            step.output = out.result;
+            return out;
+          }
+          step.status = 'completed';
+          const defaultOut = {
+            stepId: step.id,
+            toolName: step.toolName,
+            serverTarget: step.serverTarget,
+            status: 'completed',
+          };
+          step.output = defaultOut;
+          return {
+            externalResourceId: `res-${step.id}`,
+            result: defaultOut,
+          };
+        },
+      });
+    });
+
+    const edges: EdgeItem[] = [];
+    const approvedTarget = stepNodes.length > 0 ? stepNodes[0] : verifyNode;
+
+    edges.push([
+      'START',
+      quorumNode,
+      {
+        approved: approvedTarget,
+        rejected: abortNode,
+        insufficient_quorum: abortNode,
+        escalated_human: escalateNode,
+      },
+    ]);
+
+    if (stepNodes.length > 0) {
+      for (let i = 0; i < stepNodes.length; i++) {
+        const current = stepNodes[i];
+        const next = i + 1 < stepNodes.length ? stepNodes[i + 1] : verifyNode;
+        edges.push([current, next]);
+        edges.push([
+          current,
+          {
+            [OUTCOME_UNKNOWN_ROUTE]: quarantineNode,
+          },
+        ]);
+      }
+    }
+
+    return new Atlas2GraphWorkflow({
+      name: `atlas2-${incident.id}`,
+      description: `Atlas 2.0 Execution Graph for ${incident.title}`,
+      edges,
+      wal,
+      approvalGate: options?.approvalGate,
+      challengeStore: options?.challengeStore,
+      auditLedger: options?.auditLedger,
+      initialExecutionAuthority: options?.initialExecutionAuthority,
+    });
   }
 }

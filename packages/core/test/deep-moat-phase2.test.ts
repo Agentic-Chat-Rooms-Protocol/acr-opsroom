@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -6,14 +7,20 @@ import {
   dominates,
   nondominatedTiers,
   rankStacks,
+  PolicyGuardrail,
+  rankCompliantStacks,
   ApprovalGate,
   computeActionId,
   SignedDecision,
+  ConsentChallengeStore,
+  computeRequestCanonicalHash,
+  signPasskeyConsentEnvelope,
   DecisionLog,
   computeDecisionId,
   Playbook,
   PlaybookRun,
-  computePlaybookId
+  computePlaybookId,
+  DurableCommandWal,
 } from '../src/index.js';
 
 describe('Retort DoE Multi-Way ANOVA & Honest Scoring', () => {
@@ -81,6 +88,47 @@ describe('Pareto-Frontier Dominance Optimizer (NSGA-II)', () => {
     assert.strictEqual(ranked[0].isFrontier, true);
     assert.strictEqual(ranked[1].isFrontier, false);
     assert.strictEqual(ranked[2].isFrontier, true);
+  });
+
+  it('Experiment 9 (Optimization Workflow Policy Guardrail): rejects higher-scoring candidate that violates policy', () => {
+    const candidates = [
+      {
+        id: 'compliant-baseline',
+        coverage: 0.84,
+        cost: 0.09,
+        max_concurrency: 8,
+        require_auth_verification: true,
+        max_spend_per_run_usd: 2.5,
+        workspace_path: '/data/workspace/project-a',
+      },
+      {
+        id: 'rogue-high-score-no-auth',
+        coverage: 0.99, // Higher optimization score
+        cost: 0.02,     // Lower cost
+        max_concurrency: 8,
+        require_auth_verification: false, // Policy violation!
+        max_spend_per_run_usd: 2.0,
+        workspace_path: '/data/workspace/project-a',
+      },
+      {
+        id: 'rogue-path-escape-and-concurrency',
+        coverage: 0.98,
+        cost: 0.03,
+        max_concurrency: 64, // Exceeds cap of 10!
+        require_auth_verification: true,
+        max_spend_per_run_usd: 25.0, // Exceeds cap of $5.00!
+        workspace_path: '/data/workspace/../etc/shadow', // Path traversal!
+      },
+    ];
+
+    const { compliantRanked, rejectedCandidates } = rankCompliantStacks(candidates);
+    assert.strictEqual(rejectedCandidates.length, 2);
+    assert.strictEqual(rejectedCandidates[0].candidate.id, 'rogue-high-score-no-auth');
+    assert.ok(rejectedCandidates[0].violations.includes('POLICY_VIOLATION_AUTH_VERIFICATION_DISABLED'));
+
+    assert.strictEqual(compliantRanked.length, 1);
+    assert.strictEqual(compliantRanked[0].item.id, 'compliant-baseline');
+    assert.strictEqual(compliantRanked[0].isFrontier, true);
   });
 });
 
@@ -164,6 +212,142 @@ describe('Cryptographic Human Approval Gates & Decision Ledger', () => {
     });
     assert.strictEqual(tampered, false);
   });
+
+  it('Experiment 6 (Passkey Approval Scope Binding): rejects consent envelope when requested resource, version, or policy changes', () => {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+    const operatorDid = 'did:key:z6MkOperatorAlice';
+    const gate = new ApprovalGate([operatorDid]);
+    const challengeStore = new ConsentChallengeStore();
+
+    const t0 = 1_700_000_000_000;
+    const nonce = challengeStore.issueChallenge(operatorDid, 60_000, t0);
+
+    const originalReqHash = computeRequestCanonicalHash({
+      action_type: 'git.branch.delete',
+      target_resource_uri: 'acr://repo/acr-core/branch/feature-temp',
+      resource_version: 'rev-10',
+      policy_revision: 'pol-2026-11',
+      parameters: { force: false },
+    });
+
+    const signedConsent = signPasskeyConsentEnvelope(
+      {
+        consent_id: 'consent-001',
+        operator_did: operatorDid,
+        authenticator_id: 'webauthn-yubikey-01',
+        challenge_nonce: nonce,
+        request_canonical_hash: originalReqHash,
+        action_type: 'git.branch.delete',
+        target_resource_uri: 'acr://repo/acr-core/branch/feature-temp',
+        resource_version: 'rev-10',
+        policy_revision: 'pol-2026-11',
+        issued_at: t0,
+        expires_at: t0 + 60_000,
+        max_invocations: 1,
+      },
+      privateKey
+    );
+
+    const actionId = 'action-delete-branch';
+    const decision: SignedDecision = {
+      action_id: actionId,
+      verdict: 'approve',
+      reason: 'Approved via passkey',
+      decider: operatorDid,
+      decided_at: new Date(t0).toISOString(),
+    };
+
+    // Mutate target resource after authentication ('feature-temp' -> 'main') -> MUST REJECT AND BURN CHALLENGE
+    assert.throws(
+      () => {
+        gate.submitDecisionWithConsent({
+          decision,
+          envelope: signedConsent,
+          expected: {
+            request_canonical_hash: originalReqHash,
+            action_type: 'git.branch.delete',
+            target_resource_uri: 'acr://repo/acr-core/branch/main', // Changed resource!
+            resource_version: 'rev-10',
+            policy_revision: 'pol-2026-11',
+          },
+          publicKey,
+          challengeStore,
+          nowMs: t0 + 1000,
+        });
+      },
+      /CONSENT_SCOPE_MISMATCH: target_resource_uri/
+    );
+    assert.strictEqual(gate.isAuthorized(actionId), false);
+
+    // Attempting to reuse the same consent envelope even with original target fails because challenge was atomically burned!
+    assert.throws(
+      () => {
+        gate.submitDecisionWithConsent({
+          decision,
+          envelope: signedConsent,
+          expected: {
+            request_canonical_hash: originalReqHash,
+            action_type: 'git.branch.delete',
+            target_resource_uri: 'acr://repo/acr-core/branch/feature-temp',
+            resource_version: 'rev-10',
+            policy_revision: 'pol-2026-11',
+          },
+          publicKey,
+          challengeStore,
+          nowMs: t0 + 2000,
+        });
+      },
+      /challenge_nonce invalid, expired, or already consumed/
+    );
+
+    // Issue fresh challenge and sign for exact matching context -> SUCCEEDS once, then blocks second invocation
+    const nonce2 = challengeStore.issueChallenge(operatorDid, 60_000, t0 + 3000);
+    const validConsent = signPasskeyConsentEnvelope(
+      {
+        ...signedConsent,
+        consent_id: 'consent-002',
+        challenge_nonce: nonce2,
+      },
+      privateKey
+    );
+
+    gate.submitDecisionWithConsent({
+      decision,
+      envelope: validConsent,
+      expected: {
+        request_canonical_hash: originalReqHash,
+        action_type: 'git.branch.delete',
+        target_resource_uri: 'acr://repo/acr-core/branch/feature-temp',
+        resource_version: 'rev-10',
+        policy_revision: 'pol-2026-11',
+      },
+      publicKey,
+      challengeStore,
+      nowMs: t0 + 4000,
+    });
+    assert.strictEqual(gate.isAuthorized(actionId), true);
+
+    // Exceeding max_invocations (1) is rejected
+    assert.throws(
+      () => {
+        gate.submitDecisionWithConsent({
+          decision,
+          envelope: validConsent,
+          expected: {
+            request_canonical_hash: originalReqHash,
+            action_type: 'git.branch.delete',
+            target_resource_uri: 'acr://repo/acr-core/branch/feature-temp',
+            resource_version: 'rev-10',
+            policy_revision: 'pol-2026-11',
+          },
+          publicKey,
+          challengeStore,
+          nowMs: t0 + 5000,
+        });
+      },
+      /max_invocations exceeded/
+    );
+  });
 });
 
 describe('Declarative DAG Playbook Engine & Runner', () => {
@@ -220,4 +404,74 @@ describe('Declarative DAG Playbook Engine & Runner', () => {
     assert.strictEqual(run.stepsCompleted(), 3);
     assert.strictEqual(run.status(), 'completed');
   });
+
+  it('Experiment 5 (Durable Execution Side-Effect Recovery): reconciles existing external PR after crash without duplicating creation', async () => {
+    const wal = new DurableCommandWal<{ prNumber: number; url: string }>();
+
+    // Simulated external GitHub server tracking POST /pulls calls
+    let postCount = 0;
+    const externalCreatedPrs = new Map<string, { prNumber: number; url: string }>();
+
+    const dispatchCreatePr = async (idempotencyKey: string) => {
+      postCount += 1;
+      const created = { prNumber: 42, url: 'https://github.com/org/repo/pull/42' };
+      externalCreatedPrs.set(idempotencyKey, created);
+      return {
+        externalResourceId: 'pr:42',
+        result: created,
+      };
+    };
+
+    const reconcilePrProbe = async (idempotencyKey: string) => {
+      const found = externalCreatedPrs.get(idempotencyKey);
+      if (found) {
+        return {
+          exists: true,
+          externalResourceId: `pr:${found.prNumber}`,
+          result: found,
+        };
+      }
+      return { exists: false };
+    };
+
+    // 1. Worker dispatches PR creation; external GitHub server creates PR #42, then worker crashes BEFORE checkpointing!
+    await assert.rejects(
+      async () => {
+        await wal.executeOrReconcile({
+          commandId: 'cmd-create-pr-42',
+          runId: 'run-101',
+          stepId: 'step-open-pr',
+          toolName: 'github.create_pull_request',
+          canonicalArgs: JSON.stringify({ head: 'feat/hyperfusion', base: 'main', title: 'Hyperfusion' }),
+          dispatchFn: dispatchCreatePr,
+          reconcileProbeFn: reconcilePrProbe,
+          simulateCrashBeforeCheckpoint: true,
+        });
+      },
+      /SIMULATED_WORKER_CRASH_AFTER_EXTERNAL_COMPLETION_BEFORE_CHECKPOINT/
+    );
+
+    // Verify WAL recorded DISPATCHED before the crash and external side effect happened once
+    assert.strictEqual(wal.getRecord('cmd-create-pr-42')?.state, 'DISPATCHED');
+    assert.strictEqual(postCount, 1);
+
+    // 2. Recovery worker resumes the interrupted command -> reconciles PR #42 via probe WITHOUT calling dispatchCreatePr again!
+    const recovered = await wal.executeOrReconcile({
+      commandId: 'cmd-create-pr-42',
+      runId: 'run-101',
+      stepId: 'step-open-pr',
+      toolName: 'github.create_pull_request',
+      canonicalArgs: JSON.stringify({ head: 'feat/hyperfusion', base: 'main', title: 'Hyperfusion' }),
+      dispatchFn: dispatchCreatePr,
+      reconcileProbeFn: reconcilePrProbe,
+      simulateCrashBeforeCheckpoint: false,
+    });
+
+    assert.strictEqual(recovered.reconciledAfterCrash, true);
+    assert.strictEqual(recovered.record.state, 'RECONCILED');
+    assert.strictEqual(recovered.record.external_resource_id, 'pr:42');
+    assert.deepStrictEqual(recovered.record.result, { prNumber: 42, url: 'https://github.com/org/repo/pull/42' });
+    assert.strictEqual(postCount, 1, 'External PR creation MUST NOT be duplicated on recovery');
+  });
 });
+

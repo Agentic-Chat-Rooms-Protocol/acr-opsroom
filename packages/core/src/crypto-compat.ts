@@ -179,3 +179,22 @@ export function computeMerkleRoot(hashes: string[]): string {
   }
   return currentLevel[0];
 }
+
+let fallbackCounter = 0;
+
+/**
+ * Cross-platform UUID v4 generator (works in Node.js, Edge, and Browser).
+ */
+export function randomUuidSync(): string {
+  if (
+    typeof globalThis.crypto !== 'undefined' &&
+    typeof globalThis.crypto.randomUUID === 'function'
+  ) {
+    return globalThis.crypto.randomUUID();
+  }
+  fallbackCounter += 1;
+  const seed = `${Date.now()}:${Math.random()}:${fallbackCounter}`;
+  const h = sha256Sync(seed);
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+

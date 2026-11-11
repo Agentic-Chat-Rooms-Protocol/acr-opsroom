@@ -210,7 +210,17 @@ export interface AuditBlock {
   index: number;
   timestamp: number;
   incidentId: string;
-  actionType: 'INCIDENT_TRIGGERED' | 'DELIBERATION_TURN' | 'CONSENSUS_BALLOT' | 'QUORUM_EVALUATION' | 'STEP_EXECUTION' | 'CANVAS_MUTATION';
+  actionType:
+    | 'INCIDENT_TRIGGERED'
+    | 'DELIBERATION_TURN'
+    | 'CONSENSUS_BALLOT'
+    | 'QUORUM_EVALUATION'
+    | 'STEP_EXECUTION'
+    | 'CANVAS_MUTATION'
+    | 'EVENT_COMPACTION_COMMITTED'
+    | 'WORKFLOW_CHECKPOINT_REWIND'
+    | 'TOOL_CALL_INTEGRITY_VIOLATION'
+    | 'SIDE_EFFECT_RECONCILIATION_REQUIRED';
   payloadHash: string;
   previousHash: string;
   blockHash: string;
