@@ -85,3 +85,30 @@ Unlike Salesforce Atlas 1.0 (which relies on single-turn prompt chaining that ea
   2. `egress-allowlist`: Explicit firewall egress allowed only to verified telemetry and API endpoints.
   3. `readonly-fs`: Prevents disk persistence and tampering.
   4. `workspace-scoped`: File mutations restricted to a temporary chroot / ephemeral workspace directory.
+
+---
+
+## 3. Canonical Workflow Orchestration (RFC-0001 through RFC-0018)
+
+Atlas 2.0 schedules and executes 18 canonical operational workflows across the ACR ecosystem:
+
+| # | Workflow ID | Category | Protocol RFC | Operational Focus |
+|---|---|---|---|---|
+| 1 | `postgres-split-brain` | Infrastructure & DB | RFC-0016 / RFC-0002 | PostgreSQL follower isolation and standby read failover |
+| 2 | `egress-token-anomaly` | SecOps & Zero-Trust | RFC-0018 / RFC-0021 | Exfiltration detection, container quarantine & key revocation |
+| 3 | `ingress-oom-autoscaling` | Cloud & Compute | RFC-0016 / ToolHive | Pod heap exhaustion auto-recovery and rate shedding |
+| 4 | `canary-deployment-rollback` | CI/CD & Rollout | RFC-0016 / RFC-0012 | Automated canary analysis and ingress rollback to stable checkpoint |
+| 5 | `code-review-tla-verification` | Quality & Formal Methods | RFC-0002 / TLA+ | AST diff security review and formal TLA+ deadlock proof |
+| 6 | `saif-compliance-audit` | Compliance & Security | RFC-0018 / RFC-0019 | Google SAIF alignment and WASI execution fuel cap enforcement |
+| 7 | `bft-consensus-deliberation` | Governance & Consensus | RFC-0002 / RFC-0012 | 67% Byzantine supermajority voting with immutable dissent logging |
+| 8 | `twinseal-passkey-approval` | Human-in-the-Loop | RFC-0012 / WebAuthn | Dual-consent passkey gate freezing high-risk DAG transitions |
+| 9 | `durable-wal-recovery` | Data & Engine Lifecycles | RFC-0016 / ADR-0041 | Write-ahead command log replay and DAG idempotency reconcile |
+| 10 | `context-compaction-pruning` | Memory & Context | RFC-0015 / RFC-0020 | Scratchpad pruning and high-entropy RVF vector compaction |
+| 11 | `byzantine-fault-slashing` | Security & Reputation | RFC-0014 / RFC-0021 | Rogue agent detection and Wilson reputation score slashing |
+| 12 | `identity-key-rotation` | Identity & Key Management | RFC-0013 / W3C DID Core | Continuous DID signing key rotation with signed audit lineage |
+| 13 | `micro-sandbox-isolation` | Process Isolation | RFC-0018 / Onyxbox | 15-minute auto-purge ToolHive micro-container isolation |
+| 14 | `cross-model-agentflex-synthesis` | Cognitive Architecture | RFC-0002 / Agentflex | Multi-model proposal synthesis (Claude + GPT + Gemini) |
+| 15 | `declarative-step-playbook` | Workflow Automation | RFC-0016 / PlaybookRun | Structured JSON step execution with retry policies and parking |
+| 16 | `postguard-injection-defense` | Prompt Security | RFC-0019 / Postguard | Inbound prompt screening and tool output sanitization |
+| 17 | `dynamic-dag-topology` | Graph Scheduling | RFC-0016 / ADK 2.0 | Dynamic runtime dependency reordering and JoinNode barriers |
+| 18 | `transitive-trust-federation` | Identity Federation | RFC-0017 / Web of Trust | Transitive peer endorsement traversal using breadth-first search |
