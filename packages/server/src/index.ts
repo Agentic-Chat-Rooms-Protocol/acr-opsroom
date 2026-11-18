@@ -10,7 +10,7 @@ if (process.argv[1]?.endsWith('index.js') || process.argv[1]?.endsWith('index.ts
   const port = parseInt(process.env.ACR_OPSROOM_PORT || '20447', 10);
   const server = new OpsRoomServer({ port });
   server.start().then((activePort) => {
-    console.log(`[acr-opsroom] Autonomous War Room Server online on port ${activePort}`);
+    console.log(`[acr-opsroom] Autonomous War Room Server online at http://${server.host}:${activePort}`);
   }).catch((err) => {
     console.error(`[acr-opsroom] Failed to start server:`, err);
     process.exit(1);

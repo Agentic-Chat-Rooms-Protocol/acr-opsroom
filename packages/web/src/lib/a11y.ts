@@ -19,7 +19,7 @@ export const WCAG_AUDIT_REPORT: WcagCriterion[] = [
     level: 'AA',
     description: 'Text and images of text have a contrast ratio of at least 4.5:1 (3:1 for large text).',
     status: 'passed',
-    implementationNote: 'Electric cyan (#00f0ff) on obsidian (#060913) has 14.8:1 contrast. Pure white text has 18.2:1 contrast.',
+    implementationNote: 'Solar Tint (#FF8C42) on Obsidian (#000000) yields 9.1:1 contrast; black text on Zyphra Orange (#FF5500) yields 6.6:1 contrast; pure white text yields 21.0:1.',
   },
   {
     id: '1.4.6',
@@ -27,7 +27,7 @@ export const WCAG_AUDIT_REPORT: WcagCriterion[] = [
     level: 'AAA',
     description: 'Text and images of text have a contrast ratio of at least 7:1.',
     status: 'passed',
-    implementationNote: 'Primary text and high-contrast badges exceed 14:1 contrast ratios.',
+    implementationNote: 'Primary text (#FFFFFF on #000000 = 21.0:1, on #0D0D11 = 19.4:1) and Solar Tint badges exceed WCAG 2.2 AAA 7:1 contrast.',
   },
   {
     id: '2.1.1',
@@ -51,7 +51,7 @@ export const WCAG_AUDIT_REPORT: WcagCriterion[] = [
     level: 'AA',
     description: 'Any keyboard operable user interface has a mode of operation where the keyboard focus indicator is visible.',
     status: 'passed',
-    implementationNote: 'Global focus-visible outline with 2px solid cyan (#00f0ff) and 2px offset.',
+    implementationNote: 'Global focus-visible outline with 2px solid Zyphra Orange (#FF5500) and 2px offset.',
   },
   {
     id: '2.5.8',

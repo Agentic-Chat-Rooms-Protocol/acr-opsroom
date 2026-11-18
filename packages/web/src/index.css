@@ -2,14 +2,19 @@
 
 @layer base {
   :root {
-    --bg-main: #060913;
-    --card-bg: rgba(15, 23, 42, 0.7);
+    color-scheme: dark;
+    --bg-surface-base: #000000;
+    --bg-surface-elevated: #050508;
+    --bg-surface-panel: #0D0D11;
+    --bg-surface-overlay: #141414;
+    --card-bg: rgba(13, 13, 17, 0.85);
     --border-subtle: rgba(255, 255, 255, 0.08);
-    --primary-cyan: #00f0ff;
-    --accent-purple: #8b5cf6;
-    --success-green: #10b981;
-    --warning-amber: #f59e0b;
-    --danger-red: #ef4444;
+    --accent-zyphra: #FF5500;
+    --accent-zyphra-hover: #FF6600;
+    --accent-zyphra-tint: #FF8C42;
+    --success-green: #10B981;
+    --warning-amber: #F59E0B;
+    --danger-red: #EF4444;
   }
 
   /* High contrast skip link */
@@ -19,18 +24,18 @@
     left: 1rem;
     z-index: 9999;
     padding: 0.75rem 1.5rem;
-    background: #00f0ff;
+    background: #FF5500;
     color: #000000;
     font-weight: 700;
-    border-radius: 0.375rem;
-    box-shadow: 0 4px 14px rgba(0, 240, 255, 0.4);
-    transition: top 0.2s ease-in-out;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 14px rgba(255, 85, 0, 0.35);
+    transition: top 0.16s cubic-bezier(0.16, 1, 0.3, 1);
     text-decoration: none;
   }
 
   .skip-link:focus {
     top: 1rem;
-    outline: 3px solid #ffffff;
+    outline: 3px solid #FFFFFF;
     outline-offset: 2px;
   }
 
@@ -49,7 +54,7 @@
 
   /* Global WCAG 2.2 compliant focus visible styling */
   *:focus-visible {
-    outline: 2px solid #00f0ff;
+    outline: 2px solid #FF5500;
     outline-offset: 2px;
   }
 
@@ -80,14 +85,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #060913;
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #262626;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #52525B;
 }

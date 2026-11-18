@@ -13,7 +13,7 @@ export const WcagInspector: React.FC = () => {
   return (
     <section 
       aria-labelledby="wcag-heading"
-      className="p-6 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl mb-8"
+      className="p-6 rounded-2xl bg-[#0D0D11]/90 border border-white/10 backdrop-blur-xl mb-8"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-6 border-b border-white/10 gap-3">
         <div>
@@ -23,7 +23,7 @@ export const WcagInspector: React.FC = () => {
               WCAG 2.2 Conformance &amp; Accessibility Inspector
             </h2>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-zinc-400">
             Official Level AA &amp; AAA criteria audit validating keyboard navigation, high contrast, and screen readers.
           </p>
         </div>
@@ -37,13 +37,13 @@ export const WcagInspector: React.FC = () => {
       </div>
 
       {/* Screen reader live region tester */}
-      <div className="mb-6 p-4 rounded-xl bg-slate-950/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="mb-6 p-4 rounded-xl bg-[#050508] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="text-xs font-bold text-white mb-0.5 flex items-center gap-1.5">
-            <Volume2 className="w-4 h-4 text-[#00f0ff]" aria-hidden="true" />
+            <Volume2 className="w-4 h-4 text-[#FF8C42]" aria-hidden="true" />
             Live Region Test (aria-live=&quot;polite&quot;)
           </div>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-zinc-400">
             Simulate a screen-reader status update to test assistive tech compatibility.
           </p>
         </div>
@@ -66,8 +66,8 @@ export const WcagInspector: React.FC = () => {
       </div>
 
       {announcementText && (
-        <div className="mb-4 p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-300 animate-fade-in">
-          📢 Screen Reader Received: &quot;{announcementText}&quot;
+        <div className="mb-4 p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-300 motion-reduce:animate-none">
+          Screen Reader Received: &quot;{announcementText}&quot;
         </div>
       )}
 
@@ -75,7 +75,7 @@ export const WcagInspector: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-white/10 text-slate-400 font-semibold uppercase tracking-wider">
+            <tr className="border-b border-white/10 text-zinc-400 font-semibold uppercase tracking-wider">
               <th scope="col" className="py-3 px-3">Criterion ID</th>
               <th scope="col" className="py-3 px-3">Rule Name</th>
               <th scope="col" className="py-3 px-3">Level</th>
@@ -86,7 +86,7 @@ export const WcagInspector: React.FC = () => {
           <tbody className="divide-y divide-white/5">
             {WCAG_AUDIT_REPORT.map((c) => (
               <tr key={c.id} className="hover:bg-white/[0.02] transition-colors">
-                <td className="py-3.5 px-3 font-mono font-bold text-[#00f0ff]">{c.id}</td>
+                <td className="py-3.5 px-3 font-mono font-bold text-[#FF8C42]">{c.id}</td>
                 <td className="py-3.5 px-3 font-bold text-white">{c.rule}</td>
                 <td className="py-3.5 px-3">
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-slate-300">

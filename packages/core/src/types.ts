@@ -4,6 +4,8 @@
  * Beyond Salesforce Agentforce & Slack.
  */
 
+import type { CanonicalWorkflowState } from './canonical-workflows.js';
+
 export type OpsSeverity = 'P0' | 'P1' | 'P2' | 'P3';
 
 export type IncidentStatus = 
@@ -243,4 +245,7 @@ export interface OpsIncident {
   executionPlan?: ExecutionPlan;
   canvas: OpsCanvas;
   huddle?: HuddleSession;
+  workflowType?: string;
+  workflowConfig?: Record<string, unknown>;
+  workflowState?: CanonicalWorkflowState;
 }

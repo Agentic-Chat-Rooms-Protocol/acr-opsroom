@@ -31,17 +31,17 @@ export const AtlasVisualizer: React.FC = () => {
     <section 
       ref={containerRef}
       aria-labelledby="atlas-viz-heading"
-      className="p-6 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl mb-8"
+      className="p-6 rounded-2xl bg-[#0D0D11]/90 border border-white/10 backdrop-blur-xl mb-8"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-6 border-b border-white/10 gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-[#00f0ff]" aria-hidden="true" />
+            <Layers className="w-5 h-5 text-[#FF8C42]" aria-hidden="true" />
             <h2 id="atlas-viz-heading" className="text-base font-extrabold text-white">
               Atlas 2.0 Reasoning &amp; Deliberation Architecture
             </h2>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-zinc-400">
             Compare Salesforce Atlas 1.0 single-agent prompt-chaining vs ACR Atlas 2.0 Goal-Directed DAG.
           </p>
         </div>
@@ -49,7 +49,7 @@ export const AtlasVisualizer: React.FC = () => {
         <div 
           role="tablist"
           aria-label="Architecture Comparison"
-          className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-white/10"
+          className="flex items-center gap-1.5 bg-[#050508] p-1 rounded-xl border border-white/10"
         >
           <button
             role="tab"
@@ -58,10 +58,10 @@ export const AtlasVisualizer: React.FC = () => {
             aria-controls="arch-panel-atlas2"
             tabIndex={selectedArch === 'atlas2' ? 0 : -1}
             onClick={() => setSelectedArch('atlas2')}
-            className={`touch-target px-3 py-1.5 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+            className={`touch-target px-3 py-1.5 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] ${
               selectedArch === 'atlas2'
-                ? 'bg-[#00f0ff] text-black shadow-md shadow-[#00f0ff]/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-[#FF5500] text-black shadow-md shadow-[#FF5500]/20'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             ACR Atlas 2.0 (Evolved)
@@ -76,7 +76,7 @@ export const AtlasVisualizer: React.FC = () => {
             className={`touch-target px-3 py-1.5 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
               selectedArch === 'atlas1'
                 ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
-                : 'text-slate-400 hover:text-white'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             Salesforce Atlas 1.0 (Flawed)
@@ -91,40 +91,40 @@ export const AtlasVisualizer: React.FC = () => {
             aria-label="Atlas 2.0 Architecture Phases"
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-6"
           >
-            <div className="atlas-card p-3.5 rounded-xl bg-slate-950 border border-[#00f0ff]/30 text-center">
-              <span className="text-[10px] font-mono text-[#00f0ff] uppercase font-bold">Phase 1</span>
+            <div className="atlas-card p-3.5 rounded-xl bg-[#050508] border border-[#FF5500]/35 text-center">
+              <span className="text-[10px] font-mono text-[#FF8C42] uppercase font-bold">Phase 1</span>
               <h3 className="text-xs font-bold text-white mt-1">Telemetry Sensing</h3>
-              <p className="text-[11px] text-slate-400 mt-1">Z-Score &amp; IQR Anomaly Evaluation</p>
+              <p className="text-[11px] text-zinc-400 mt-1">Z-Score &amp; IQR Anomaly Evaluation</p>
             </div>
 
-            <div className="atlas-card p-3.5 rounded-xl bg-slate-950 border border-[#00f0ff]/30 text-center">
-              <span className="text-[10px] font-mono text-[#00f0ff] uppercase font-bold">Phase 2</span>
+            <div className="atlas-card p-3.5 rounded-xl bg-[#050508] border border-[#FF5500]/35 text-center">
+              <span className="text-[10px] font-mono text-[#FF8C42] uppercase font-bold">Phase 2</span>
               <h3 className="text-xs font-bold text-white mt-1">Ambient Grounding</h3>
-              <p className="text-[11px] text-slate-400 mt-1">System Logs, Git Diffs, MCP Catalog</p>
+              <p className="text-[11px] text-zinc-400 mt-1">System Logs, Git Diffs, MCP Catalog</p>
             </div>
 
-            <div className="atlas-card p-3.5 rounded-xl bg-slate-950 border border-[#00f0ff]/30 text-center">
-              <span className="text-[10px] font-mono text-[#00f0ff] uppercase font-bold">Phase 3</span>
+            <div className="atlas-card p-3.5 rounded-xl bg-[#050508] border border-[#FF5500]/35 text-center">
+              <span className="text-[10px] font-mono text-[#FF8C42] uppercase font-bold">Phase 3</span>
               <h3 className="text-xs font-bold text-white mt-1">Squad Deliberation</h3>
-              <p className="text-[11px] text-slate-400 mt-1">Parallel Cross-Agent Critique &amp; DAG</p>
+              <p className="text-[11px] text-zinc-400 mt-1">Parallel Cross-Agent Critique &amp; DAG</p>
             </div>
 
-            <div className="atlas-card p-3.5 rounded-xl bg-slate-950 border border-emerald-500/40 text-center bg-emerald-950/20">
+            <div className="atlas-card p-3.5 rounded-xl border border-emerald-500/40 text-center bg-emerald-950/20">
               <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold">Phase 4</span>
               <h3 className="text-xs font-bold text-white mt-1">Byzantine Quorum</h3>
-              <p className="text-[11px] text-slate-400 mt-1">67% Ed25519 Weighted Consensus</p>
+              <p className="text-[11px] text-zinc-400 mt-1">67% Ed25519 Weighted Consensus</p>
             </div>
 
-            <div className="atlas-card p-3.5 rounded-xl bg-slate-950 border border-[#00f0ff]/30 text-center">
-              <span className="text-[10px] font-mono text-[#00f0ff] uppercase font-bold">Phase 5</span>
+            <div className="atlas-card p-3.5 rounded-xl bg-[#050508] border border-[#FF5500]/35 text-center">
+              <span className="text-[10px] font-mono text-[#FF8C42] uppercase font-bold">Phase 5</span>
               <h3 className="text-xs font-bold text-white mt-1">Sandbox Execution</h3>
-              <p className="text-[11px] text-slate-400 mt-1">ToolHive Micro-Container Containment</p>
+              <p className="text-[11px] text-zinc-400 mt-1">ToolHive Micro-Container Containment</p>
             </div>
 
-            <div className="atlas-card p-3.5 rounded-xl bg-slate-950 border border-[#00f0ff]/30 text-center">
-              <span className="text-[10px] font-mono text-[#00f0ff] uppercase font-bold">Phase 6</span>
+            <div className="atlas-card p-3.5 rounded-xl bg-[#050508] border border-[#FF5500]/35 text-center">
+              <span className="text-[10px] font-mono text-[#FF8C42] uppercase font-bold">Phase 6</span>
               <h3 className="text-xs font-bold text-white mt-1">Merkle Proof</h3>
-              <p className="text-[11px] text-slate-400 mt-1">Tamper-Proof Audit &amp; Live Canvas</p>
+              <p className="text-[11px] text-zinc-400 mt-1">Tamper-Proof Audit &amp; Live Canvas</p>
             </div>
           </div>
 

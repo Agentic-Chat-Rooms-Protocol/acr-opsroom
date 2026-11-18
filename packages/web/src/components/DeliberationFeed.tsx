@@ -15,22 +15,22 @@ export const DeliberationFeed: React.FC<DeliberationFeedProps> = ({
   return (
     <section 
       aria-labelledby="deliberation-heading"
-      className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl flex flex-col h-full"
+      className="p-5 rounded-2xl bg-[#0D0D11]/90 border border-white/10 backdrop-blur-xl flex flex-col h-full"
     >
       <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/10">
         <div>
           <h2 id="deliberation-heading" className="text-sm font-extrabold text-white flex items-center gap-2">
-            <Bot className="w-4 h-4 text-[#00f0ff]" aria-hidden="true" />
+            <Bot className="w-4 h-4 text-[#FF8C42]" aria-hidden="true" />
             Atlas 2.0 Squad Deliberation Feed
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-zinc-400">
             Multi-agent reasoning with cryptographic Ed25519 payload signatures.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
-            Phase: <span className="text-[#00f0ff] uppercase font-bold">{activePhase}</span>
+          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/5 text-zinc-300 border border-white/10">
+            Phase: <span className="text-[#FF8C42] uppercase font-bold">{activePhase}</span>
           </span>
           <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950/40 text-emerald-400 border border-emerald-500/30">
             {turns.length} Turns
@@ -46,8 +46,8 @@ export const DeliberationFeed: React.FC<DeliberationFeedProps> = ({
         className="space-y-3.5 overflow-y-auto max-h-[480px] pr-1"
       >
         {turns.length === 0 ? (
-          <div className="text-center py-16 text-slate-500 text-xs">
-            <Cpu className="w-8 h-8 mx-auto mb-2 text-slate-600 animate-pulse" aria-hidden="true" />
+          <div className="text-center py-16 text-zinc-500 text-xs">
+            <Cpu className="w-8 h-8 mx-auto mb-2 text-zinc-600 animate-pulse motion-reduce:animate-none" aria-hidden="true" />
             Awaiting incident trigger. Autonomous squad in standby mode.
           </div>
         ) : (
@@ -57,11 +57,11 @@ export const DeliberationFeed: React.FC<DeliberationFeedProps> = ({
             const isSRE = turn.role === 'sre_reliability';
 
             const borderClass = isAtlas 
-              ? 'border-[#00f0ff]/30 bg-[#00f0ff]/[0.02]' 
+              ? 'border-[#FF5500]/35 bg-[#FF5500]/[0.03]' 
               : isSecOps 
               ? 'border-emerald-500/30 bg-emerald-500/[0.02]'
               : isSRE
-              ? 'border-indigo-500/30 bg-indigo-500/[0.02]'
+              ? 'border-sky-500/30 bg-sky-500/[0.02]'
               : 'border-white/10 bg-white/[0.02]';
 
             return (
@@ -98,10 +98,10 @@ export const DeliberationFeed: React.FC<DeliberationFeedProps> = ({
 
                 {/* Proposed Tool Actions */}
                 {turn.proposedActions && turn.proposedActions.length > 0 && (
-                  <div className="p-2.5 rounded-lg bg-slate-950/80 border border-white/10 mb-2">
-                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 mb-1.5">
+                  <div className="p-2.5 rounded-lg bg-[#050508] border border-white/10 mb-2">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-400 mb-1.5">
                       <span className="flex items-center gap-1">
-                        <Terminal className="w-3 h-3 text-[#00f0ff]" aria-hidden="true" />
+                        <Terminal className="w-3 h-3 text-[#FF8C42]" aria-hidden="true" />
                         Proposed Tool Call ({turn.proposedActions[0].serverName})
                       </span>
                       <span className={`px-1.5 py-0.2 text-[10px] uppercase font-bold rounded ${
@@ -113,9 +113,9 @@ export const DeliberationFeed: React.FC<DeliberationFeedProps> = ({
                       </span>
                     </div>
 
-                    <div className="font-mono text-xs text-[#00f0ff]">
+                    <div className="font-mono text-xs text-[#FF8C42]">
                       {turn.proposedActions[0].toolName}(
-                      <span className="text-slate-300">
+                      <span className="text-zinc-300">
                         {JSON.stringify(turn.proposedActions[0].parameters)}
                       </span>
                       )

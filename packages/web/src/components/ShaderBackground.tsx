@@ -24,7 +24,7 @@ export const ShaderBackground: React.FC = () => {
     >
       {!hasShaderError ? (
         <MeshGradient
-          colors={['#060913', '#0a192f', '#002b3d', '#190a28']}
+          colors={['#000000', '#050508', '#0D0D11', '#141414']}
           distortion={0.85}
           swirl={0.65}
           speed={prefersReducedMotion ? 0 : 0.15}
@@ -38,12 +38,12 @@ export const ShaderBackground: React.FC = () => {
           onError={() => setHasShaderError(true)}
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#060913] via-[#0b1426] to-[#04060c]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#000000] via-[#050508] to-[#0D0D11]" />
       )}
 
       {/* Atmospheric ambient lighting and subtle grid overlay */}
       <div 
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#00f0ff]/5 via-transparent to-transparent pointer-events-none" 
+        className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#FF5500]/8 via-transparent to-transparent pointer-events-none" 
       />
       <div 
         className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" 

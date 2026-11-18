@@ -3,10 +3,10 @@
 > **The Cryptographic, Byzantine-Fault-Tolerant War Room for Autonomous Enterprise AI. Beyond Salesforce Agentforce & Slack.**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Ecosystem](https://img.shields.io/badge/ACR_Ecosystem-Repo_21-cyan.svg)](http://localhost:3300/ACR)
+[![Ecosystem](https://img.shields.io/badge/ACR_Ecosystem-Repo_21-FF5500.svg)](https://github.com/Agentic-Chat-Rooms-Protocol)
 [![WCAG](https://img.shields.io/badge/WCAG_2.2-Level_AAA_Compliant-emerald.svg)](docs/WCAG-2.2-COMPLIANCE.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](package.json)
-[![Security](https://img.shields.io/badge/Security-Zero_Trust_Sandbox-purple.svg)](docs/ARCHITECTURE.md)
+[![Security](https://img.shields.io/badge/Security-Zero_Trust_Sandbox-FF5500.svg)](docs/ARCHITECTURE.md)
 
 ---
 
@@ -86,10 +86,10 @@ If any high-risk tool is proposed or if Byzantine anomalies are detected (e.g. t
 
 ### Installation & Build
 ```bash
-git clone http://localhost:3300/ACR/acr-opsroom.git
+git clone https://github.com/Agentic-Chat-Rooms-Protocol/acr-opsroom.git
 cd acr-opsroom
 npm install
-npm run build
+npm run typecheck && npm run build
 ```
 
 ### Running Test Suite

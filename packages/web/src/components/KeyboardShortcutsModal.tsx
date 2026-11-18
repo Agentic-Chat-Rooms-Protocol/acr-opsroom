@@ -47,11 +47,11 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
     >
       <div 
         ref={modalRef}
-        className="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-white/15 shadow-2xl relative animate-in fade-in zoom-in-95"
+        className="w-full max-w-md p-6 rounded-2xl bg-[#0D0D11] border border-white/15 shadow-2xl relative"
       >
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <Keyboard className="w-5 h-5 text-[#00f0ff]" aria-hidden="true" />
+            <Keyboard className="w-5 h-5 text-[#FF8C42]" aria-hidden="true" />
             <h2 id="modal-title" className="text-base font-bold text-white">
               Keyboard Navigation Shortcuts
             </h2>
@@ -60,7 +60,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="touch-target p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="touch-target p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -69,8 +69,8 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
         <div className="space-y-2.5 mb-6">
           {shortcuts.map((s, idx) => (
             <div key={idx} className="flex items-center justify-between text-xs py-1.5 border-b border-white/5">
-              <span className="text-slate-300">{s.desc}</span>
-              <kbd className="px-2 py-1 rounded bg-slate-950 border border-white/15 text-white font-mono text-[11px] font-bold">
+              <span className="text-zinc-300">{s.desc}</span>
+              <kbd className="px-2 py-1 rounded bg-[#050508] border border-white/15 text-white font-mono text-[11px] font-bold">
                 {s.key}
               </kbd>
             </div>

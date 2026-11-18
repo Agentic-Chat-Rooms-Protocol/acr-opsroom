@@ -31,15 +31,15 @@ export const IncidentCommander: React.FC<IncidentCommanderProps> = ({
   return (
     <section 
       aria-labelledby="commander-heading"
-      className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl mb-8"
+      className="p-5 rounded-2xl bg-[#0D0D11]/90 border border-white/10 backdrop-blur-xl mb-8"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
           <h2 id="commander-heading" className="text-lg font-bold text-white flex items-center gap-2">
-            <Flame className="w-5 h-5 text-amber-400" aria-hidden="true" />
+            <Flame className="w-5 h-5 text-[#FF8C42]" aria-hidden="true" />
             Operational Incident Commander
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-zinc-400">
             Select a mission-critical failure scenario or simulate custom telemetry spikes.
           </p>
         </div>
@@ -47,7 +47,7 @@ export const IncidentCommander: React.FC<IncidentCommanderProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsCustomMode(!isCustomMode)}
-            className="touch-target px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition-all"
+            className="touch-target px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-300 transition-all"
           >
             {isCustomMode ? 'Use Presets' : 'Custom Prompt'}
           </button>
@@ -56,7 +56,7 @@ export const IncidentCommander: React.FC<IncidentCommanderProps> = ({
             onClick={onReset}
             disabled={isRunning}
             aria-label="Reset war room state"
-            className="touch-target px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition-all disabled:opacity-50 flex items-center gap-1.5"
+            className="touch-target px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-300 transition-all disabled:opacity-50 flex items-center gap-1.5"
           >
             <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
             Reset
@@ -77,29 +77,29 @@ export const IncidentCommander: React.FC<IncidentCommanderProps> = ({
                 onClick={() => onSelectPreset(preset)}
                 className={`text-left p-3.5 rounded-xl border transition-all ${
                   isSelected
-                    ? 'border-[#00f0ff] bg-[#00f0ff]/10 shadow-md shadow-[#00f0ff]/10'
-                    : 'border-white/10 bg-slate-950/50 hover:border-white/20'
+                    ? 'border-[#FF5500] bg-[#FF5500]/10 shadow-md shadow-[#FF5500]/10'
+                    : 'border-white/10 bg-[#050508] hover:border-white/20'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-black tracking-wider ${
                     preset.severity === 'P0' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
                     preset.severity === 'P1' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                    'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                    'bg-sky-500/20 text-sky-400 border border-sky-500/40'
                   }`}>
                     {preset.severity} INCIDENT
                   </span>
-                  <span className="text-[11px] text-slate-400 font-medium">{preset.category}</span>
+                  <span className="text-[11px] text-zinc-400 font-medium">{preset.category}</span>
                 </div>
                 <h3 className="text-sm font-bold text-white line-clamp-1 mb-1">{preset.title}</h3>
-                <p className="text-xs text-slate-400 line-clamp-2">{preset.description}</p>
+                <p className="text-xs text-zinc-400 line-clamp-2">{preset.description}</p>
               </button>
             );
           })}
         </div>
       ) : (
         <div className="mb-5">
-          <label htmlFor="custom-incident-prompt" className="block text-xs font-semibold text-slate-300 mb-1.5">
+          <label htmlFor="custom-incident-prompt" className="block text-xs font-semibold text-zinc-300 mb-1.5">
             Describe Production Outage or Telemetry Spike:
           </label>
           <input
@@ -108,30 +108,30 @@ export const IncidentCommander: React.FC<IncidentCommanderProps> = ({
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
             placeholder="e.g., Stripe webhook timeouts in EU region causing invoice queue backlog"
-            className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/15 text-sm text-white placeholder-slate-500 focus:border-[#00f0ff] focus:outline-none focus:ring-1 focus:ring-[#00f0ff]"
+            className="w-full px-4 py-2.5 rounded-xl bg-[#050508] border border-white/15 text-sm text-white placeholder-zinc-500 focus:border-[#FF5500] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500]"
           />
         </div>
       )}
 
       {/* Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-white/10 gap-3">
-        <div className="flex items-center gap-3 text-xs text-slate-300">
-          <span className="font-semibold text-slate-400">Target Squad:</span>
+        <div className="flex items-center gap-3 text-xs text-zinc-300">
+          <span className="font-semibold text-zinc-400">Target Squad:</span>
           <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-white font-mono">
             {selectedPreset.category === 'SecOps & Zero-Trust' ? 'SecOps Sentinel Squad (5 Agents)' : 'SRE Reliability Squad (5 Agents)'}
           </span>
-          <span className="hidden sm:inline text-slate-500">|</span>
+          <span className="hidden sm:inline text-zinc-500">|</span>
           <span className="hidden sm:inline text-emerald-400 font-medium">BFT Quorum Required: 67%</span>
         </div>
 
         <button
           onClick={handleTrigger}
           disabled={isRunning}
-          className="touch-target px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#0284c7] text-black font-extrabold text-xs uppercase tracking-wider hover:opacity-95 shadow-md shadow-[#00f0ff]/20 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+          className="touch-target px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-black font-extrabold text-xs uppercase tracking-wider hover:from-[#FF6600] hover:to-[#FF8C42] shadow-md shadow-[#FF5500]/20 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
         >
           {isRunning ? (
             <>
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+              <RefreshCw className="w-3.5 h-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
               Deliberating Quorum...
             </>
           ) : (

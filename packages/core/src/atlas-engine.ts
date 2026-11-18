@@ -22,6 +22,11 @@ import {
   ToolCallProposal
 } from './types.js';
 import { ByzantineConsensusEngine } from './consensus.js';
+import {
+  findCanonicalWorkflow,
+  initializeCanonicalWorkflowState,
+  validateCanonicalWorkflowConfig,
+} from './canonical-workflows.js';
 import { ApprovalGate, ConsentChallengeStore } from './approvals/approval_engine.js';
 import { CryptographicAuditLedger } from './audit-ledger.js';
 import { DurableCommandWal } from './playbooks/playbook_runner.js';
@@ -45,36 +50,62 @@ export class Atlas2Engine {
   private static MAX_DELIBERATION_TURNS = 10;
 
   /**
-   * Initialize a new OpsIncident with grounded state machine.
+   * Initialize a new OpsIncident with grounded state machine and optional canonical workflow.
    */
   public static createIncident(
     title: string,
     description: string,
-    squad: AgentSquad
+    squad: AgentSquad,
+    options?: {
+      workflowType?: string;
+      workflowConfig?: Record<string, unknown>;
+    }
   ): OpsIncident {
     const id = `inc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const now = Date.now();
 
     const canvasId = `canvas-${id}`;
-    
-    return {
+
+    let workflowType: string | undefined;
+    let workflowConfig: Record<string, unknown> | undefined;
+    let workflowState: OpsIncident['workflowState'];
+    let severity: OpsIncident['severity'] = 'P1';
+
+    if (options?.workflowType) {
+      const wf = findCanonicalWorkflow(options.workflowType);
+      if (!wf) {
+        throw new Error(`Unknown canonical workflow: ${options.workflowType}`);
+      }
+      const mergedConfig = { ...wf.defaultConfig, ...(options.workflowConfig ?? {}) };
+      const validation = validateCanonicalWorkflowConfig(wf.id, mergedConfig);
+      if (!validation.valid) {
+        throw new Error(`Invalid workflowConfig for ${wf.id}: ${validation.errors.join('; ')}`);
+      }
+      workflowType = wf.id;
+      workflowConfig = mergedConfig;
+      workflowState = initializeCanonicalWorkflowState(wf.id, mergedConfig) ?? undefined;
+      severity = wf.severity;
+    }
+
+    const incident: OpsIncident = {
       id,
       title,
       description,
-      severity: 'P1',
+      severity,
       status: 'detecting',
       createdAt: now,
       telemetry: [],
       squad,
       deliberationTurns: [],
       ballots: [],
+      ...(workflowType ? { workflowType, workflowConfig, workflowState } : {}),
       canvas: {
         id: canvasId,
         incidentId: id,
         title: `OpsRoom War Room: ${title}`,
         version: 1,
         status: 'detecting',
-        summaryMarkdown: `### Incident Ingestion\n**Title:** ${title}\n**Description:** ${description}\n**Status:** Analyzing telemetry baseline...`,
+        summaryMarkdown: `### Incident Ingestion\n**Title:** ${title}\n**Description:** ${description}${workflowType ? `\n**Workflow:** ${workflowType}` : ''}\n**Status:** Analyzing telemetry baseline...`,
         actionItems: [
           {
             id: `act-1`,
@@ -104,6 +135,12 @@ export class Atlas2Engine {
         lastUpdated: now,
       },
     };
+
+    if (workflowType) {
+      this.compileExecutionPlan(incident, `${workflowType}: ${title}`);
+    }
+
+    return incident;
   }
 
   /**
@@ -246,6 +283,32 @@ export class Atlas2Engine {
       }
     }
 
+    if (steps.length === 0 && incident.workflowType) {
+      const wf = findCanonicalWorkflow(incident.workflowType);
+      if (wf) {
+        for (const wfStep of wf.steps) {
+          const stepId = `${wfStep.id}-${stepNumber}`;
+          const mergedParams = { ...wfStep.parameters, ...(incident.workflowConfig ?? {}) };
+          const auditHash = sha256Sync(`${stepId}:${wfStep.tool}:${JSON.stringify(mergedParams)}`);
+          steps.push({
+            id: stepId,
+            stepNumber: stepNumber++,
+            title: wfStep.title,
+            toolName: wfStep.tool,
+            serverTarget: wfStep.server,
+            parameters: mergedParams,
+            sandboxProfile: wfStep.risk === 'critical' ? 'no-network' : 'workspace-scoped',
+            requiresDualConsent: Boolean(
+              wfStep.requiresDualConsent || wfStep.risk === 'critical' || wfStep.risk === 'high'
+            ),
+            status: 'pending',
+            durationMs: 0,
+            auditHash,
+          });
+        }
+      }
+    }
+
     const plan: ExecutionPlan = {
       planId: `plan-${incident.id}-${Date.now()}`,
       incidentId: incident.id,
@@ -361,6 +424,15 @@ export class Atlas2Engine {
     });
 
     const verifyNode = new FunctionNode('verify_resolution', (ctx) => {
+      if (incident.status === 'detecting') {
+        this.transitionPhase(incident, 'awaiting_quorum');
+      }
+      if (incident.status === 'deliberating' || incident.status === 'awaiting_quorum') {
+        this.transitionPhase(incident, 'executing');
+      }
+      if (incident.status === 'executing') {
+        this.transitionPhase(incident, 'verifying');
+      }
       this.transitionPhase(incident, 'resolved');
       return createEvent({
         author: 'verify_resolution',
@@ -382,6 +454,12 @@ export class Atlas2Engine {
         stepId: step.id,
         toolName: step.toolName,
         dispatcher: async (_args, idempotencyKey) => {
+          if (incident.status === 'detecting') {
+            this.transitionPhase(incident, 'awaiting_quorum');
+          }
+          if (incident.status === 'deliberating' || incident.status === 'awaiting_quorum') {
+            this.transitionPhase(incident, 'executing');
+          }
           step.status = 'executing';
           if (options?.stepDispatcher) {
             const out = await options.stepDispatcher(step, idempotencyKey);

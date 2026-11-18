@@ -305,18 +305,18 @@ export const App: React.FC = () => {
       />
 
       {/* Main Landmark */}
-      <main id="main" tabIndex={-1} role="main" className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 relative z-10 focus:outline-none">
+      <main id="main" tabIndex={-1} role="main" className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 relative z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
         {/* Back Link on Secondary Tabs */}
         {activeTab !== 'simulator' && (
           <div className="mb-6 flex items-center justify-between">
             <button
               onClick={() => setActiveTab('simulator')}
-              className="touch-target inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-[#00f0ff] transition-colors"
+              className="touch-target inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-[#FF8C42] transition-colors"
             >
               <span>←</span>
               <span>Back to War Room Simulator</span>
             </button>
-            <span className="text-[11px] font-mono text-slate-500 uppercase">
+            <span className="text-[11px] font-mono text-zinc-400 uppercase">
               Section: {activeTab}
             </span>
           </div>
@@ -402,17 +402,17 @@ export const App: React.FC = () => {
       />
 
       {/* Footer Landmark */}
-      <footer role="contentinfo" className="w-full border-t border-white/10 py-6 px-4 lg:px-8 text-center text-xs text-slate-500 relative z-10 bg-[#060913]/90">
+      <footer role="contentinfo" className="w-full border-t border-white/10 py-6 px-4 lg:px-8 text-center text-xs text-zinc-400 relative z-10 bg-[#0D0D11]/90">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
-            <span className="font-bold text-slate-300">ACR OpsRoom</span> · Apache-2.0 License · Agentic Chat Rooms Ecosystem (Repo #21)
+            <span className="font-bold text-zinc-200">ACR OpsRoom</span> · Apache-2.0 License · Agentic Chat Rooms Ecosystem (Repo #21)
           </div>
           <div className="flex items-center gap-4 text-[11px]">
-            <a href="http://localhost:3300/ACR/acr-opsroom" className="hover:text-[#00f0ff] transition-colors">Local Gitea</a>
+            <a href="https://github.com/Agentic-Chat-Rooms-Protocol/acr-opsroom" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF8C42] transition-colors">GitHub</a>
             <span>·</span>
-            <button onClick={() => setActiveTab('wcag')} className="hover:text-[#00f0ff] transition-colors">WCAG 2.2 AAA Audit</button>
+            <button onClick={() => setActiveTab('wcag')} className="hover:text-[#FF8C42] transition-colors">WCAG 2.2 AAA Audit</button>
             <span>·</span>
-            <button onClick={() => setIsShortcutsOpen(true)} className="hover:text-[#00f0ff] transition-colors">Keyboard Shortcuts (?)</button>
+            <button onClick={() => setIsShortcutsOpen(true)} className="hover:text-[#FF8C42] transition-colors">Keyboard Shortcuts (?)</button>
           </div>
         </div>
       </footer>

@@ -198,4 +198,194 @@ describe('OpsRoomServer Endpoints', () => {
     assert.equal(execRes.data.execResult.allSucceeded, true);
     assert.equal(execRes.data.canvas.status, 'resolved');
   });
+
+  test('supports canonical 18 workflows API and workflowType trigger validation', async () => {
+    const listRes = await makeRequest('GET', '/api/v1/opsroom/workflows');
+    assert.equal(listRes.status, 200);
+    assert.equal(listRes.data.count, 18);
+    assert.equal(listRes.data.workflows.length, 18);
+    assert.equal(listRes.data.contract.length, 18);
+
+    const singleRes = await makeRequest('GET', '/api/v1/opsroom/workflows/postgres-split-brain');
+    assert.equal(singleRes.status, 200);
+    assert.equal(singleRes.data.workflow.id, 'postgres-split-brain');
+
+    const missingWf = await makeRequest('GET', '/api/v1/opsroom/workflows/does-not-exist');
+    assert.equal(missingWf.status, 404);
+
+    const triggerWf = await makeRequest('POST', '/api/v1/opsroom/incidents/trigger', {
+      title: 'Canonical Workflow Trigger',
+      description: 'Validates Twinseal workflow config initialization',
+      workflowType: 'twinseal-passkey-approval',
+      workflowConfig: { challengeTtlSec: 120 },
+    });
+    assert.equal(triggerWf.status, 201);
+    assert.equal(triggerWf.data.incident.workflowType, 'twinseal-passkey-approval');
+    assert.equal(triggerWf.data.incident.workflowState.canonicalId, 'twinseal-passkey-approval');
+    assert.equal(triggerWf.data.incident.executionPlan.steps.length, 2);
+
+    const badWfTrigger = await makeRequest('POST', '/api/v1/opsroom/incidents/trigger', {
+      title: 'Bad Workflow Trigger',
+      workflowType: 'unknown-wf',
+    });
+    assert.equal(badWfTrigger.status, 400);
+  });
+});
+
+describe('OpsRoomServer Security Hardening (Loopback, Host/Origin Allowlist, Bearer Auth, 413 Drain)', () => {
+  test('defaults to 127.0.0.1 loopback and refuses non-loopback bind without apiToken', async () => {
+    const prevHost = process.env.ACR_OPSROOM_HOST;
+    const prevToken = process.env.ACR_API_TOKEN;
+    delete process.env.ACR_OPSROOM_HOST;
+    delete process.env.ACR_API_TOKEN;
+
+    try {
+      const defaultServer = new OpsRoomServer({ port: 29910 });
+      assert.equal(defaultServer.host, '127.0.0.1');
+
+      const nonLoopback = new OpsRoomServer({ port: 29911, host: '0.0.0.0' });
+      await assert.rejects(() => nonLoopback.start(), /Refusing non-loopback bind/);
+    } finally {
+      if (prevHost !== undefined) process.env.ACR_OPSROOM_HOST = prevHost;
+      if (prevToken !== undefined) process.env.ACR_API_TOKEN = prevToken;
+    }
+  });
+
+  test('enforces Host allowlist, Origin allowlist, PNA preflight, Bearer auth, and bounded 413 draining', async () => {
+    const securedPort = 29912;
+    const secured = new OpsRoomServer({
+      port: securedPort,
+      host: '127.0.0.1',
+      apiToken: 'opsroom-test-bearer-token',
+    });
+    await secured.start();
+    const baseUrl = `http://127.0.0.1:${securedPort}`;
+
+    try {
+      // 1. Untrusted Host header fails closed with 403 FORBIDDEN_HOST
+      const badHost = await new Promise<{ status: number; body: string }>((resolve, reject) => {
+        const req = http.request(
+          {
+            hostname: '127.0.0.1',
+            port: securedPort,
+            path: '/health',
+            method: 'GET',
+            headers: { Host: `attacker.example:${securedPort}` },
+          },
+          (res) => {
+            let body = '';
+            res.on('data', (c) => { body += c; });
+            res.on('end', () => resolve({ status: res.statusCode || 0, body }));
+          }
+        );
+        req.on('error', reject);
+        req.end();
+      });
+      assert.equal(badHost.status, 403);
+      assert.match(badHost.body, /FORBIDDEN_HOST/);
+
+      // 2. /health stays accessible without Bearer token
+      const healthRes = await fetch(`${baseUrl}/health`);
+      assert.equal(healthRes.status, 200);
+      assert.equal(healthRes.headers.get('access-control-allow-origin'), null);
+
+      // 3. Untrusted Origin fails closed with 403; OPTIONS without Origin fails closed with 403
+      const evilOrigin = await fetch(`${baseUrl}/health`, {
+        headers: { Origin: 'https://evil.example' },
+      });
+      assert.equal(evilOrigin.status, 403);
+
+      const missingOriginOptions = await fetch(`${baseUrl}/api/v1/opsroom/workflows`, {
+        method: 'OPTIONS',
+      });
+      assert.equal(missingOriginOptions.status, 403);
+
+      // 4. Allowlisted OPTIONS preflight includes PNA header and exact origin (never *)
+      const pnaPreflight = await fetch(`${baseUrl}/api/v1/opsroom/workflows`, {
+        method: 'OPTIONS',
+        headers: {
+          Origin: 'https://agentchatrooms.dev',
+          'Access-Control-Request-Private-Network': 'true',
+        },
+      });
+      assert.equal(pnaPreflight.status, 204);
+      assert.equal(pnaPreflight.headers.get('access-control-allow-origin'), 'https://agentchatrooms.dev');
+      assert.equal(pnaPreflight.headers.get('access-control-allow-private-network'), 'true');
+      assert.equal(pnaPreflight.headers.get('vary'), 'Origin');
+
+      // 5. Protected routes require Bearer token
+      const unauthWorkflows = await fetch(`${baseUrl}/api/v1/opsroom/workflows`, {
+        headers: { Origin: 'http://localhost:30447' },
+      });
+      assert.equal(unauthWorkflows.status, 401);
+      assert.equal(unauthWorkflows.headers.get('access-control-allow-origin'), 'http://localhost:30447');
+
+      const authWorkflows = await fetch(`${baseUrl}/api/v1/opsroom/workflows`, {
+        headers: {
+          Origin: 'http://localhost:30447',
+          Authorization: 'Bearer opsroom-test-bearer-token',
+        },
+      });
+      assert.equal(authWorkflows.status, 200);
+      assert.equal(authWorkflows.headers.get('access-control-allow-origin'), 'http://localhost:30447');
+      assert.equal(authWorkflows.headers.get('vary'), 'Origin');
+
+      // 6. Invalid JSON returns 400
+      const badJson = await fetch(`${baseUrl}/api/v1/opsroom/incidents/trigger`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer opsroom-test-bearer-token',
+        },
+        body: '{invalid-json',
+      });
+      assert.equal(badJson.status, 400);
+
+      // 7. Oversized Content-Length >1 MiB returns 413 with Connection: close
+      const oversizedFetch = await fetch(`${baseUrl}/api/v1/opsroom/incidents/trigger`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer opsroom-test-bearer-token',
+        },
+        body: JSON.stringify({ title: 'x'.repeat(1100 * 1024) }),
+      });
+      assert.equal(oversizedFetch.status, 413);
+      assert.equal(oversizedFetch.headers.get('connection'), 'close');
+
+      // 8. Chunked >1 MiB payload drains cleanly and returns 413 without ECONNRESET
+      const chunkedRes = await new Promise<{ statusCode: number; connection?: string }>((resolve, reject) => {
+        const req = http.request(
+          `${baseUrl}/api/v1/opsroom/incidents/trigger`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer opsroom-test-bearer-token',
+              'Transfer-Encoding': 'chunked',
+            },
+          },
+          (res) => {
+            res.resume();
+            res.on('end', () => {
+              resolve({
+                statusCode: res.statusCode || 0,
+                connection: res.headers.connection,
+              });
+            });
+          }
+        );
+        req.on('error', reject);
+        const chunk = Buffer.alloc(300 * 1024, 'a');
+        for (let i = 0; i < 4; i++) {
+          req.write(chunk);
+        }
+        req.end();
+      });
+      assert.equal(chunkedRes.statusCode, 413);
+      assert.equal(chunkedRes.connection, 'close');
+    } finally {
+      await secured.stop();
+    }
+  });
 });

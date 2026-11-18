@@ -400,24 +400,24 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
   return (
     <section
       aria-labelledby="huddle-heading"
-      className="p-5 sm:p-6 rounded-3xl bg-slate-900/85 border border-white/[0.08] backdrop-blur-2xl shadow-2xl mb-8 relative overflow-hidden ring-1 ring-white/[0.05]"
+      className="p-5 sm:p-6 rounded-3xl bg-[#0D0D11]/95 border border-white/[0.08] backdrop-blur-2xl shadow-2xl mb-8 relative overflow-hidden ring-1 ring-white/[0.05]"
     >
       {/* Ambient background glow */}
-      <div className="absolute top-0 left-1/4 w-96 h-32 bg-purple-600/10 blur-[90px] pointer-events-none" />
-      <div className="absolute -bottom-10 right-10 w-72 h-32 bg-cyan-600/10 blur-[80px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-96 h-32 bg-[#FF5500]/10 blur-[90px] pointer-events-none" />
+      <div className="absolute -bottom-10 right-10 w-72 h-32 bg-[#FF8C42]/10 blur-[80px] pointer-events-none" />
 
       {/* Top Header Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-4 mb-5 border-b border-white/[0.08] gap-3 relative z-10">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+            <div className="w-8 h-8 rounded-xl bg-[#FF5500]/15 border border-[#FF5500]/35 flex items-center justify-center text-[#FF8C42] shadow-[0_0_15px_rgba(255,85,0,0.2)]">
               <Mic className="w-4 h-4" aria-hidden="true" />
             </div>
             <h2 id="huddle-heading" className="text-base sm:text-lg font-bold text-white tracking-tight">
               Synthetic Multi-Agent Huddle Room
             </h2>
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 font-mono flex items-center gap-1.5 shadow-[0_0_12px_rgba(168,85,247,0.2)]">
-              <Activity className="w-2.5 h-2.5 text-purple-400 animate-pulse" />
+            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#FF5500]/15 border border-[#FF5500]/35 text-[#FF8C42] font-mono flex items-center gap-1.5">
+              <Activity className="w-2.5 h-2.5 text-[#FF5500] animate-pulse motion-reduce:animate-none" />
               Live Audio Fabric
             </span>
 
@@ -428,16 +428,16 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               title="Click to configure Dynamic Hardware Load-Balancer & Local Models"
               aria-haspopup="dialog"
               aria-expanded={isEngineModalOpen}
-              className="group text-[11px] px-2.5 py-1 rounded-full bg-slate-950/80 border border-cyan-500/30 text-cyan-300 hover:border-cyan-400 font-mono flex items-center gap-1.5 transition-all cursor-pointer hover:shadow-[0_0_12px_rgba(6,182,212,0.25)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              className="group text-[11px] px-2.5 py-1 rounded-full bg-[#050508] border border-[#FF5500]/35 text-[#FF8C42] hover:border-[#FF5500] font-mono flex items-center gap-1.5 transition-all cursor-pointer hover:shadow-[0_0_12px_rgba(255,85,0,0.25)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500]"
             >
-              <Cpu className="w-3 h-3 text-cyan-400 group-hover:rotate-45 transition-transform" />
+              <Cpu className="w-3 h-3 text-[#FF8C42] group-hover:rotate-45 transition-transform" />
               <span>Tier {activeTier}: {activeSpec.name.split(' ')[0]}</span>
-              <span className="text-slate-500">|</span>
+              <span className="text-zinc-500">|</span>
               <span className="text-emerald-400">{hardwareProfile.readinessScore} Score</span>
-              <Settings2 className="w-3 h-3 text-cyan-400 opacity-70 group-hover:opacity-100" />
+              <Settings2 className="w-3 h-3 text-[#FF8C42] opacity-70 group-hover:opacity-100" />
             </button>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-zinc-400 mt-1">
             Beyond Slack AI Huddle notes: Autonomous agents debate hypotheses in real time with distinct vocal personas and live acoustic synthesis.
           </p>
         </div>
@@ -451,7 +451,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             className={`px-3.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 active:scale-95 shadow-sm ${
               isPlayingAll
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
-                : 'bg-purple-600/20 text-purple-200 border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-400'
+                : 'bg-[#FF5500] text-black border-[#FF5500] hover:bg-[#FF8C42] font-bold'
             }`}
           >
             {isPlayingAll ? (
@@ -471,7 +471,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
           {(isPlayingAll || activeTurnIndex !== null || isPlayingBrief) && (
             <button
               onClick={handleStop}
-              className="p-1.5 rounded-xl bg-slate-950 border border-white/10 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-all cursor-pointer"
+              className="p-1.5 rounded-xl bg-[#050508] border border-white/10 text-zinc-400 hover:text-rose-400 hover:border-rose-500/30 transition-all cursor-pointer"
               title="Stop audio playback"
             >
               <Square className="w-3.5 h-3.5" />
@@ -479,15 +479,15 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
           )}
 
           {/* Speed Selector */}
-          <div className="flex items-center rounded-xl bg-slate-950/80 border border-white/10 p-0.5 text-[10px] font-mono">
+          <div className="flex items-center rounded-xl bg-[#050508] border border-white/10 p-0.5 text-[10px] font-mono">
             {[1.0, 1.25, 1.5].map((speed) => (
               <button
                 key={speed}
                 onClick={() => setSpeechSpeed(speed)}
                 className={`px-2 py-1 rounded-lg transition-all ${
                   speechSpeed === speed
-                    ? 'bg-purple-500/30 text-purple-200 font-bold'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-[#FF5500]/25 text-[#FF8C42] font-bold'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 {speed}x
@@ -501,7 +501,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
               isMuted
                 ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
-                : 'bg-slate-950 border-white/10 text-slate-400 hover:text-white'
+                : 'bg-[#050508] border-white/10 text-zinc-400 hover:text-white'
             }`}
             title={isMuted ? 'Unmute voice' : 'Mute voice'}
           >
@@ -512,9 +512,9 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
           <button
             onClick={onSynthesizeBrief}
             disabled={!huddle || huddle.lines.length === 0}
-            className="px-3.5 py-1.5 rounded-xl border border-purple-500/30 bg-purple-950/40 hover:bg-purple-900/50 text-xs font-semibold text-purple-200 flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer active:scale-98 shadow-sm"
+            className="px-3.5 py-1.5 rounded-xl border border-[#FF5500]/40 bg-[#FF5500]/10 hover:bg-[#FF5500]/20 text-xs font-semibold text-[#FF8C42] flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer active:scale-98 shadow-sm"
           >
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
+            <Sparkles className="w-3.5 h-3.5 text-[#FF8C42]" aria-hidden="true" />
             Synthesize Brief
           </button>
         </div>
@@ -522,14 +522,14 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
 
       {/* Live Speaking Indicator Banner */}
       {activeLine && activeSpeakerPersona && (
-        <div className="mb-4 px-4 py-2.5 rounded-2xl bg-purple-950/30 border border-purple-500/30 flex items-center justify-between gap-3 text-xs">
+        <div className="mb-4 px-4 py-2.5 rounded-2xl bg-[#FF5500]/10 border border-[#FF5500]/35 flex items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-purple-500"></span>
+              <span className="animate-ping motion-reduce:animate-none absolute inline-flex h-full w-full rounded-full bg-[#FF8C42] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF5500]"></span>
             </span>
             <span className="text-white font-bold">{activeLine.speakerName}</span>
-            <span className="text-[11px] text-purple-300 font-mono">
+            <span className="text-[11px] text-[#FF8C42] font-mono">
               ({activeSpeakerPersona.timbreProfile} • {activeSpeakerPersona.pitch} pitch • {activeSpeakerPersona.rate}x rate • {
                 activeSpeakerPersona.stereoPan === 0 ? 'Center Stage' : activeSpeakerPersona.stereoPan < 0 ? `${Math.abs(Math.round(activeSpeakerPersona.stereoPan * 100))}% Left` : `${Math.round(activeSpeakerPersona.stereoPan * 100)}% Right`
               })
@@ -541,7 +541,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             {liveFrequencies.map((val, idx) => (
               <span
                 key={idx}
-                className="w-1 bg-gradient-to-t from-purple-500 to-cyan-400 rounded-t transition-all duration-75"
+                className="w-1 bg-gradient-to-t from-[#FF5500] to-[#FF8C42] rounded-t transition-all duration-75"
                 style={{ height: `${Math.max(15, val * 100)}%` }}
               />
             ))}
@@ -555,8 +555,8 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
         {/* Transcript Conversation (2 Cols) */}
         <div className="lg:col-span-2 space-y-3 max-h-[260px] overflow-y-auto pr-1">
           {!huddle || huddle.lines.length === 0 ? (
-            <div className="text-center py-12 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-xs text-slate-500 flex flex-col items-center justify-center gap-2">
-              <Mic className="w-6 h-6 text-slate-600 animate-pulse" />
+            <div className="text-center py-12 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-xs text-zinc-500 flex flex-col items-center justify-center gap-2">
+              <Mic className="w-6 h-6 text-zinc-600 animate-pulse motion-reduce:animate-none" />
               <span>Huddle room in standby. Begins automatically upon incident detection.</span>
             </div>
           ) : (
@@ -569,8 +569,8 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                   key={idx}
                   className={`p-3.5 rounded-2xl border transition-all text-xs relative ${
                     isCurrentlySpeaking
-                      ? 'bg-purple-950/40 border-purple-500/60 shadow-[0_0_20px_rgba(168,85,247,0.2)] ring-1 ring-purple-400/40'
-                      : 'bg-slate-950/60 border-white/[0.06] hover:border-white/15'
+                      ? 'bg-[#FF5500]/10 border-[#FF5500]/60 shadow-[0_0_20px_rgba(255,85,0,0.2)] ring-1 ring-[#FF5500]/40'
+                      : 'bg-[#050508] border-white/[0.06] hover:border-white/15'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -579,8 +579,8 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                       <div
                         className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold transition-all ${
                           isCurrentlySpeaking
-                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
-                            : 'bg-purple-950/60 border border-purple-500/30 text-purple-300'
+                            ? 'bg-[#FF5500] text-black shadow-lg shadow-[#FF5500]/30'
+                            : 'bg-[#141414] border border-[#FF5500]/30 text-[#FF8C42]'
                         }`}
                       >
                         {line.speakerName.charAt(0)}
@@ -590,7 +590,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-white">{line.speakerName}</span>
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-slate-400 font-mono">
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-zinc-400 font-mono">
                               {persona.timbreProfile}
                             </span>
                           </div>
@@ -600,8 +600,8 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                             onClick={() => handlePlayTurn(idx)}
                             className={`px-2 py-0.5 rounded-lg border text-[10px] font-mono flex items-center gap-1 transition-all cursor-pointer ${
                               isCurrentlySpeaking
-                                ? 'bg-purple-500/30 text-purple-200 border-purple-400'
-                                : 'bg-white/5 text-slate-400 border-white/10 hover:text-white hover:border-white/20'
+                                ? 'bg-[#FF5500]/25 text-[#FF8C42] border-[#FF5500]'
+                                : 'bg-white/5 text-zinc-400 border-white/10 hover:text-white hover:border-white/20'
                             }`}
                             title={`Listen to ${line.speakerName}`}
                           >
@@ -610,7 +610,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                           </button>
                         </div>
 
-                        <p className="text-slate-300 leading-relaxed">{line.text}</p>
+                        <p className="text-zinc-300 leading-relaxed">{line.text}</p>
                       </div>
                     </div>
 
@@ -620,14 +620,14 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                         ? liveFrequencies.slice(0, 8).map((val, bIdx) => (
                             <span
                               key={bIdx}
-                              className="w-1 bg-purple-400 rounded-t"
+                              className="w-1 bg-[#FF5500] rounded-t"
                               style={{ height: `${Math.max(20, val * 100)}%` }}
                             />
                           ))
                         : line.audioFrequencyData?.slice(0, 8).map((val, bIdx) => (
                             <span
                               key={bIdx}
-                              className="w-1 bg-purple-400/40 rounded-t"
+                              className="w-1 bg-[#FF8C42]/40 rounded-t"
                               style={{ height: `${Math.max(20, val * 100)}%` }}
                             />
                           ))}
@@ -640,16 +640,16 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
         </div>
 
         {/* Executive Brief Box (1 Col) */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-purple-950/20 border border-purple-500/20 flex flex-col justify-between relative overflow-hidden">
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#050508] border border-[#FF5500]/25 flex flex-col justify-between relative overflow-hidden">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#FF8C42] flex items-center gap-1.5">
                 <Volume2 className="w-3.5 h-3.5" aria-hidden="true" />
                 Board-Level Executive Brief
               </h3>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed mb-4">
+            <p className="text-xs text-zinc-300 leading-relaxed mb-4">
               {huddle?.executiveBrief ||
                 'Awaiting huddle synthesis. Spoken audio notes and action items will sync directly into the Ops Canvas.'}
             </p>
@@ -661,7 +661,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                 className={`w-full py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 ${
                   isPlayingBrief
                     ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                    : 'bg-purple-600/20 hover:bg-purple-600/30 text-purple-200 border-purple-500/40 shadow-sm'
+                    : 'bg-[#FF5500] hover:bg-[#FF8C42] text-black border-[#FF5500] font-bold shadow-sm'
                 }`}
               >
                 {isPlayingBrief ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
@@ -670,13 +670,13 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-purple-500/20 text-[10px] text-purple-400 flex items-center justify-between font-mono">
+          <div className="mt-4 pt-3 border-t border-white/10 text-[10px] text-zinc-400 flex items-center justify-between font-mono">
             <span className="flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-emerald-400" />
               Automated Canvas Sync
             </span>
             <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-cyan-400" />
+              <ShieldCheck className="w-3 h-3 text-[#FF8C42]" />
               Ed25519 Verified
             </span>
           </div>
@@ -691,7 +691,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               setIsEngineModalOpen(false);
             }
           }}
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-fadeIn"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden"
           aria-hidden={pendingDownloadTier !== null ? 'true' : undefined}
         >
           <div
@@ -703,26 +703,26 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             tabIndex={-1}
             onKeyDown={(e) => handleModalTabTrap(e, engineModalRef)}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col bg-slate-950/95 border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_30px_rgba(6,182,212,0.15)] relative text-slate-200 ring-1 ring-white/10 overflow-hidden my-auto"
+            className="w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col bg-[#0D0D11] border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_30px_rgba(255,85,0,0.15)] relative text-zinc-200 ring-1 ring-white/10 overflow-hidden my-auto"
           >
             {/* Pinned Header */}
-            <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 shrink-0 bg-slate-950/95">
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 shrink-0 bg-[#0D0D11]">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
+                <div className="w-9 h-9 rounded-xl bg-[#FF5500]/15 border border-[#FF5500]/35 flex items-center justify-center text-[#FF8C42] shadow-[0_0_12px_rgba(255,85,0,0.2)]">
                   <Cpu className="w-4 h-4" aria-hidden="true" />
                 </div>
                 <div>
                   <h2 id="engine-modal-title" className="text-base sm:text-lg font-bold text-white tracking-tight">
                     Hardware-Aware Voice Model & Load Balancer Engine
                   </h2>
-                  <p id="engine-modal-description" className="text-xs text-slate-400">
+                  <p id="engine-modal-description" className="text-xs text-zinc-400">
                     Dynamic client-side hardware forecasting & on-device neural voice selection.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsEngineModalOpen(false)}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white border border-white/10 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500]"
                 aria-label="Close settings"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
@@ -732,21 +732,21 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             {/* Scrollable Body */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               {/* Hardware Diagnostic Banner */}
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="p-4 rounded-2xl bg-[#050508] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-white">Detected Hardware Profile:</span>
-                    <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 font-mono text-[10px]">
+                    <span className="px-2 py-0.5 rounded bg-[#FF5500]/15 text-[#FF8C42] font-mono text-[10px]">
                       {hardwareProfile.detectedSpecsSummary}
                     </span>
                   </div>
-                  <p className="text-slate-400 text-[11px]">
-                    WebGPU: {hardwareProfile.hasWebGPU ? '✅ Supported' : '❌ Unavailable'} • AudioContext: {hardwareProfile.hasAudioContext ? '✅' : '❌'} • SpeechSynthesis: {hardwareProfile.hasSpeechSynthesis ? '✅' : '❌'}
+                  <p className="text-zinc-400 text-[11px]">
+                    WebGPU: {hardwareProfile.hasWebGPU ? 'Supported' : 'Unavailable'} • AudioContext: {hardwareProfile.hasAudioContext ? 'Yes' : 'No'} • SpeechSynthesis: {hardwareProfile.hasSpeechSynthesis ? 'Yes' : 'No'}
                   </p>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className="text-[10px] uppercase font-mono text-slate-400">Readiness Score</div>
+                  <div className="text-[10px] uppercase font-mono text-zinc-400">Readiness Score</div>
                   <div className="text-lg font-extrabold text-emerald-400 font-mono">
                     {hardwareProfile.readinessScore}/100
                   </div>
@@ -769,8 +769,8 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                       onClick={() => requestTierSelection(t)}
                       className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-cyan-950/30 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/30'
-                          : 'bg-slate-900/60 border-white/10 hover:border-white/20'
+                          ? 'bg-[#FF5500]/10 border-[#FF5500] shadow-[0_0_15px_rgba(255,85,0,0.15)] ring-1 ring-[#FF5500]/30'
+                          : 'bg-[#050508] border-white/10 hover:border-white/20'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -783,19 +783,19 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                               </span>
                             )}
                             {isSelected && (
-                              <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-full">
+                              <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-[#FF5500]/20 text-[#FF8C42] border border-[#FF5500]/40 rounded-full">
                                 Active
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-400">{spec.description}</p>
+                          <p className="text-xs text-zinc-400">{spec.description}</p>
                         </div>
 
                         <div className="text-right shrink-0 text-xs font-mono">
                           <div className="text-white font-bold">
                             {spec.downloadSizeMb === 0 ? '0 MB Download' : `${spec.downloadSizeMb} MB`}
                           </div>
-                          <div className="text-[10px] text-slate-400">~{spec.latencyEstimateMs}ms latency</div>
+                          <div className="text-[10px] text-zinc-400">~{spec.latencyEstimateMs}ms latency</div>
                         </div>
                       </div>
 
@@ -813,7 +813,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
 
                       {/* Action button inside card */}
                       <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-xs">
-                        <span className="text-[11px] text-slate-400 font-mono">
+                        <span className="text-[11px] text-zinc-400 font-mono">
                           Backend: {spec.computeBackend}
                         </span>
                         <button
@@ -821,12 +821,12 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
                             e.stopPropagation();
                             requestTierSelection(t);
                           }}
-                          className={`px-3 py-1.5 rounded-xl font-semibold text-xs transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98 ${
+                          className={`px-3 py-1.5 rounded-xl font-semibold text-xs transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] active:scale-98 ${
                             isSelected
-                              ? 'bg-cyan-500 text-slate-950 font-bold shadow-md shadow-cyan-500/25'
+                              ? 'bg-[#FF5500] text-black font-bold shadow-md shadow-[#FF5500]/25'
                               : isDownloaded
                               ? 'bg-white/10 hover:bg-white/20 text-white'
-                              : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-500/20'
+                              : 'bg-[#FF5500] hover:bg-[#FF8C42] text-black font-bold shadow-md shadow-[#FF5500]/20'
                           }`}
                         >
                           {isSelected ? 'Active' : isDownloaded ? 'Select' : `Confirm & Download (${spec.downloadSizeMb}MB)`}
@@ -839,13 +839,13 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             </div>
 
             {/* Pinned Footer */}
-            <div className="flex items-center justify-between p-6 pt-3 border-t border-white/10 shrink-0 bg-slate-950/95">
-              <span className="text-[11px] text-slate-500 font-mono hidden sm:inline">
+            <div className="flex items-center justify-between p-6 pt-3 border-t border-white/10 shrink-0 bg-[#0D0D11]">
+              <span className="text-[11px] text-zinc-500 font-mono hidden sm:inline">
                 WebGPU / SIMD Neural Voice Fabric
               </span>
               <button
                 onClick={() => setIsEngineModalOpen(false)}
-                className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-all cursor-pointer border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98 ml-auto sm:ml-0"
+                className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-all cursor-pointer border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] active:scale-98 ml-auto sm:ml-0"
               >
                 Close Settings
               </button>
@@ -863,7 +863,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               setPendingDownloadTier(null);
             }
           }}
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-fadeIn"
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-hidden"
         >
           <div
             ref={downloadModalRef}
@@ -874,19 +874,19 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             tabIndex={-1}
             onKeyDown={(e) => handleModalTabTrap(e, downloadModalRef)}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] flex flex-col bg-slate-950/95 border border-white/15 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.85),0_0_30px_rgba(6,182,212,0.2)] relative text-slate-200 ring-1 ring-cyan-500/30 overflow-hidden my-auto"
+            className="w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] flex flex-col bg-[#0D0D11] border border-white/15 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.85),0_0_30px_rgba(255,85,0,0.2)] relative text-zinc-200 ring-1 ring-[#FF5500]/30 overflow-hidden my-auto"
           >
             {/* Pinned Header */}
-            <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 shrink-0 bg-slate-950/95">
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 shrink-0 bg-[#0D0D11]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                  <Download className="w-5 h-5 animate-bounce" aria-hidden="true" />
+                  <Download className="w-5 h-5 animate-bounce motion-reduce:animate-none" aria-hidden="true" />
                 </div>
                 <div>
                   <h2 id="confirm-download-title" className="text-base sm:text-lg font-bold text-white tracking-tight">
                     Explicit Local Model Download Confirmation
                   </h2>
-                  <p id="confirm-download-description" className="text-xs text-slate-400">
+                  <p id="confirm-download-description" className="text-xs text-zinc-400">
                     User consent required before transferring weights.
                   </p>
                 </div>
@@ -894,7 +894,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               <button
                 disabled={downloadProgress.isDownloading}
                 onClick={() => setPendingDownloadTier(null)}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white border border-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500]"
                 aria-label="Close dialog"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
@@ -903,26 +903,26 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
 
             {/* Scrollable Body */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-xs">
-              <p className="text-slate-300 leading-relaxed">
+              <p className="text-zinc-300 leading-relaxed">
                 You are requesting to download and initialize the on-device neural voice model:
               </p>
 
               {/* Model Spec Table */}
-              <div className="p-3.5 rounded-2xl bg-slate-900 border border-white/10 font-mono text-xs space-y-1.5">
+              <div className="p-3.5 rounded-2xl bg-[#050508] border border-white/10 font-mono text-xs space-y-1.5">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Model:</span>
-                  <span className="text-cyan-300 font-bold">{VOICE_MODEL_SPECS[pendingDownloadTier].name}</span>
+                  <span className="text-zinc-400">Model:</span>
+                  <span className="text-[#FF8C42] font-bold">{VOICE_MODEL_SPECS[pendingDownloadTier].name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Download Payload:</span>
+                  <span className="text-zinc-400">Download Payload:</span>
                   <span className="text-white font-bold">{VOICE_MODEL_SPECS[pendingDownloadTier].downloadSizeMb} MB</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">RAM / VRAM Overhead:</span>
+                  <span className="text-zinc-400">RAM / VRAM Overhead:</span>
                   <span className="text-amber-300">~{VOICE_MODEL_SPECS[pendingDownloadTier].ramOverheadMb} MB</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Compute Target:</span>
+                  <span className="text-zinc-400">Compute Target:</span>
                   <span className="text-white">{VOICE_MODEL_SPECS[pendingDownloadTier].computeBackend}</span>
                 </div>
               </div>
@@ -940,12 +940,12 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               {downloadProgress.isDownloading && (
                 <div className="space-y-2 pt-2">
                   <div className="flex justify-between text-xs font-mono">
-                    <span className="text-cyan-300">Downloading ONNX Tensors...</span>
+                    <span className="text-[#FF8C42]">Downloading ONNX Tensors...</span>
                     <span className="text-white">{downloadProgress.percent}% ({downloadProgress.downloadedMb}MB / {downloadProgress.totalMb}MB)</span>
                   </div>
-                  <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-white/10">
+                  <div className="w-full h-2.5 bg-[#050508] rounded-full overflow-hidden border border-white/10">
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-purple-600 transition-all duration-150"
+                      className="h-full bg-gradient-to-r from-[#FF5500] to-[#FF8C42] transition-all duration-150"
                       style={{ width: `${downloadProgress.percent}%` }}
                     />
                   </div>
@@ -954,11 +954,11 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             </div>
 
             {/* Pinned Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 pt-3 border-t border-white/10 shrink-0 bg-slate-950/95">
+            <div className="flex items-center justify-end gap-3 p-6 pt-3 border-t border-white/10 shrink-0 bg-[#0D0D11]">
               <button
                 disabled={downloadProgress.isDownloading}
                 onClick={() => setPendingDownloadTier(null)}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500]"
               >
                 Cancel / Keep Universal Native
               </button>
@@ -966,17 +966,17 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
               <button
                 disabled={downloadProgress.isDownloading}
                 onClick={handleConfirmDownload}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-xs font-bold text-white shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 active:scale-98"
+                className="px-5 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF8C42] text-xs font-bold text-black shadow-lg shadow-[#FF5500]/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] active:scale-98"
               >
                 {downloadProgress.isDownloading ? (
                   <>
-                    <Activity className="w-3.5 h-3.5 animate-spin" />
+                    <Activity className="w-3.5 h-3.5 animate-spin motion-reduce:animate-none" />
                     <span>Downloading Model...</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Confirm & Download Locally</span>
+                    <span>Confirm &amp; Download Locally</span>
                   </>
                 )}
               </button>

@@ -33,7 +33,7 @@ export const RoiCalculator: React.FC = () => {
   return (
     <section 
       aria-labelledby="roi-heading"
-      className="p-6 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl mb-8"
+      className="p-6 rounded-2xl bg-[#0D0D11]/90 border border-white/10 backdrop-blur-xl mb-8"
     >
       <div className="text-center max-w-2xl mx-auto mb-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 mb-3">
@@ -43,18 +43,18 @@ export const RoiCalculator: React.FC = () => {
         <h2 id="roi-heading" className="text-2xl font-extrabold text-white mb-2">
           Calculate Your Migration Savings
         </h2>
-        <p className="text-xs sm:text-sm text-slate-400">
+        <p className="text-xs sm:text-sm text-zinc-400">
           Salesforce charges $2.00 per conversation plus platform fees. See your annual savings with ACR OpsRoom.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Sliders Input */}
-        <div className="space-y-6 p-5 rounded-xl bg-slate-950/60 border border-white/10">
+        <div className="space-y-6 p-5 rounded-xl bg-[#050508] border border-white/10">
           <div>
-            <div className="flex justify-between text-xs font-bold text-slate-300 mb-2">
+            <div className="flex justify-between text-xs font-bold text-zinc-300 mb-2">
               <label htmlFor="conversations-slider">Monthly Operations Conversations / Actions:</label>
-              <span className="text-[#00f0ff] font-mono text-sm">{formatNumber(monthlyConversations)}</span>
+              <span className="text-[#FF8C42] font-mono text-sm">{formatNumber(monthlyConversations)}</span>
             </div>
             <input
               id="conversations-slider"
@@ -64,9 +64,9 @@ export const RoiCalculator: React.FC = () => {
               step="1000"
               value={monthlyConversations}
               onChange={(e) => handleConversationsChange(Number(e.target.value))}
-              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#00f0ff]"
+              className="w-full h-2 bg-[#262626] rounded-lg appearance-none cursor-pointer accent-[#FF5500]"
             />
-            <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+            <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
               <span>2,000</span>
               <span>100,000</span>
               <span>200,000</span>
@@ -74,9 +74,9 @@ export const RoiCalculator: React.FC = () => {
           </div>
 
           <div>
-            <div className="flex justify-between text-xs font-bold text-slate-300 mb-2">
+            <div className="flex justify-between text-xs font-bold text-zinc-300 mb-2">
               <label htmlFor="agents-slider">Autonomous Agents &amp; Squads Active:</label>
-              <span className="text-purple-400 font-mono text-sm">{activeAgents}</span>
+              <span className="text-[#FF8C42] font-mono text-sm">{activeAgents}</span>
             </div>
             <input
               id="agents-slider"
@@ -86,9 +86,9 @@ export const RoiCalculator: React.FC = () => {
               step="5"
               value={activeAgents}
               onChange={(e) => handleAgentsChange(Number(e.target.value))}
-              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+              className="w-full h-2 bg-[#262626] rounded-lg appearance-none cursor-pointer accent-[#FF5500]"
             />
-            <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+            <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
               <span>5 Agents</span>
               <span>125 Agents</span>
               <span>250 Agents</span>
@@ -104,7 +104,7 @@ export const RoiCalculator: React.FC = () => {
               <div className="text-2xl font-black text-white mt-0.5">
                 {formatCurrency(salesforceAnnualCost)}
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-[11px] text-zinc-400 mt-1">
                 Includes $2.00/conv + org base fee + Data Cloud consumption credits
               </p>
             </div>
@@ -113,10 +113,10 @@ export const RoiCalculator: React.FC = () => {
           <div className="p-5 rounded-xl bg-emerald-950/20 border border-emerald-500/40 flex items-center justify-between relative overflow-hidden">
             <div className="relative z-10">
               <span className="text-xs text-emerald-400 font-bold uppercase tracking-wider">ACR OpsRoom Annual Cost</span>
-              <div className="text-3xl font-black text-[#00f0ff] mt-0.5">
+              <div className="text-3xl font-black text-[#FF8C42] mt-0.5">
                 {formatCurrency(acrAnnualCost)}
               </div>
-              <p className="text-[11px] text-slate-300 mt-1 font-medium">
+              <p className="text-[11px] text-zinc-300 mt-1 font-medium">
                 100% Open Protocol ($0 fee) + pure token compute cost
               </p>
             </div>

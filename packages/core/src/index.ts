@@ -3,6 +3,8 @@
  */
 
 export * from './types.js';
+export * from './acr-core-client.js';
+export * from './canonical-workflows.js';
 export * from './atlas-engine.js';
 export * from './consensus.js';
 export * from './ml-router.js';

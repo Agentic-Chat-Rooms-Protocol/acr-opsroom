@@ -29,7 +29,7 @@ export const ConsensusBallotBox: React.FC<ConsensusBallotBoxProps> = ({
   return (
     <section 
       aria-labelledby="consensus-heading"
-      className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl flex flex-col h-full"
+      className="p-5 rounded-2xl bg-[#0D0D11]/90 border border-white/10 backdrop-blur-xl flex flex-col h-full"
     >
       <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/10">
         <div>
@@ -54,18 +54,18 @@ export const ConsensusBallotBox: React.FC<ConsensusBallotBoxProps> = ({
       </div>
 
       {/* Quorum Progress Meter */}
-      <div className="mb-5 p-4 rounded-xl bg-slate-950/70 border border-white/10">
+      <div className="mb-5 p-4 rounded-xl bg-[#050508] border border-white/10">
         <div className="flex items-center justify-between text-xs mb-2">
-          <span className="font-semibold text-slate-300">Weighted Quorum Ratio</span>
+          <span className="font-semibold text-zinc-300">Weighted Quorum Ratio</span>
           <span className="font-mono font-bold text-white">
-            {approvalPercent}% <span className="text-slate-500 font-normal">/ {thresholdPercent}% Target</span>
+            {approvalPercent}% <span className="text-zinc-500 font-normal">/ {thresholdPercent}% Target</span>
           </span>
         </div>
 
-        <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden relative" role="progressbar" aria-valuenow={approvalPercent} aria-valuemin={0} aria-valuemax={100}>
+        <div className="w-full h-3 bg-[#18181B] rounded-full overflow-hidden relative" role="progressbar" aria-valuenow={approvalPercent} aria-valuemin={0} aria-valuemax={100}>
           <div 
             className={`h-full transition-all duration-500 rounded-full ${
-              isQuorumMet ? 'bg-gradient-to-r from-emerald-500 to-[#00f0ff]' : 'bg-amber-500'
+              isQuorumMet ? 'bg-gradient-to-r from-[#FF5500] to-[#10B981]' : 'bg-amber-500'
             }`}
             style={{ width: `${Math.min(100, approvalPercent)}%` }}
           />
@@ -77,7 +77,7 @@ export const ConsensusBallotBox: React.FC<ConsensusBallotBoxProps> = ({
           />
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2">
+        <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-2">
           <span>Total Ballots: {ballots.length}</span>
           <span className={isQuorumMet ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
             {isQuorumMet ? '✓ 2/3 Byzantine Quorum Achieved' : 'Pending Supermajority'}
@@ -126,14 +126,14 @@ export const ConsensusBallotBox: React.FC<ConsensusBallotBoxProps> = ({
             type="checkbox"
             checked={humanApproved}
             onChange={onToggleHumanApproval}
-            className="w-4 h-4 rounded text-[#00f0ff] focus:ring-[#00f0ff] focus:ring-offset-0 bg-slate-900 border-white/30"
+            className="w-4 h-4 rounded text-[#FF5500] focus:ring-[#FF5500] focus:ring-offset-0 bg-[#050508] border-white/30"
           />
           <div className="text-xs">
             <span className="font-bold text-white flex items-center gap-1">
-              <UserCheck className="w-3.5 h-3.5 text-[#00f0ff]" aria-hidden="true" />
+              <UserCheck className="w-3.5 h-3.5 text-[#FF8C42]" aria-hidden="true" />
               Human-in-the-Loop Dual Consent
             </span>
-            <p className="text-[11px] text-slate-400">Required for critical-tier sandboxed modifications.</p>
+            <p className="text-[11px] text-zinc-400">Required for critical-tier sandboxed modifications.</p>
           </div>
         </label>
 
@@ -144,10 +144,10 @@ export const ConsensusBallotBox: React.FC<ConsensusBallotBoxProps> = ({
             incidentStatus === 'resolved'
               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default'
               : isExecuting
-              ? 'bg-cyan-500/30 text-cyan-200 border border-cyan-400 animate-pulse'
+              ? 'bg-[#FF5500]/25 text-[#FF8C42] border border-[#FF5500] animate-pulse motion-reduce:animate-none'
               : isQuorumMet 
-              ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 shadow-lg shadow-cyan-500/20 active:scale-98'
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'
+              ? 'bg-[#FF5500] hover:bg-[#FF8C42] text-black shadow-lg shadow-[#FF5500]/25 active:scale-98'
+              : 'bg-[#18181B] text-zinc-500 cursor-not-allowed border border-white/5'
           }`}
         >
           {incidentStatus === 'resolved' ? (
@@ -157,12 +157,12 @@ export const ConsensusBallotBox: React.FC<ConsensusBallotBoxProps> = ({
             </>
           ) : incidentStatus === 'verifying' ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+              <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
               <span>Verifying Telemetry &amp; Action Items...</span>
             </>
           ) : isExecuting ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+              <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
               <span>Executing Inside ToolHive Sandbox...</span>
             </>
           ) : (
