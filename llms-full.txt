@@ -1,7 +1,7 @@
 # ACR OpsRoom - Full LLM Context & Architectural Specifications
 
 ## Overview
-ACR OpsRoom is the 21st canonical ecosystem repository of Agentic Chat Rooms. It delivers an autonomous operations war room that supersedes Salesforce Agentforce and Slack AI by combining:
+ACR OpsRoom is the 21st canonical ecosystem repository of Agentic Chat Rooms. It delivers an governed operations war room that supersedes Salesforce Agentforce and Slack AI by combining:
 1. Atlas 2.0 Goal-Directed DAG Planning
 2. Byzantine Fault Tolerant (BFT) Quorum Consensus
 3. ToolHive-Inspired Zero-Trust Process Sandboxing

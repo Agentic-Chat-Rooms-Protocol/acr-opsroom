@@ -438,7 +438,7 @@ export const SyntheticHuddle: React.FC<SyntheticHuddleProps> = ({
             </button>
           </div>
           <p className="text-xs text-zinc-400 mt-1">
-            Beyond Slack AI Huddle notes: Autonomous agents debate hypotheses in real time with distinct vocal personas and live acoustic synthesis.
+            Beyond Slack AI Huddle notes: Governed agents debate hypotheses in real time with distinct vocal personas and live acoustic synthesis.
           </p>
         </div>
 

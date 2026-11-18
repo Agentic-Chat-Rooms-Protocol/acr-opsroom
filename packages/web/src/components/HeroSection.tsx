@@ -80,8 +80,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* Top Tagline */}
         <div className="hero-tag inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs font-semibold text-zinc-300 mb-6 backdrop-blur-md">
           <span className="w-2 h-2 rounded-full bg-[#FF5500] animate-ping motion-reduce:animate-none" aria-hidden="true" />
-          <span>Next-Gen Evolution of Salesforce Agentforce &amp; Slack AI</span>
-          <span className="text-[#FF8C42] font-bold">· Pure Open Protocol</span>
+          <span>Stop Single-Agent Outage Drift</span>
+          <span className="text-[#FF8C42] font-bold">· WCAG 2.2 AAA COMPLIANT</span>
         </div>
 
         {/* Main Title */}
@@ -91,14 +91,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         >
           The Cryptographic War Room for <br className="hidden sm:block" />
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF5500] via-[#FF8C42] to-[#FFB07A]">
-            Autonomous Enterprise AI
+            Governed Enterprise AI
           </span>
         </h1>
 
         <p className="hero-desc text-base sm:text-lg text-zinc-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-          While Salesforce locks your team into single-agent prompt chains and $2-per-conversation bills, 
-          <strong> ACR OpsRoom</strong> orchestrates heterogeneous multi-agent squads with 
-          <strong> Byzantine Fault Tolerant (BFT) Quorum Consensus</strong>, zero-trust sandboxing, and real-time collaborative canvases.
+          Single-agent prompt chains hallucinate during incidents and charge $2 per conversation.
+          <strong> ACR OpsRoom</strong> coordinates multi-agent SRE and SecOps squads behind a
+          <strong> 67% Consensus Gate</strong>, <strong>Atlas 2.0 Dynamic DAG</strong> rollbacks, <strong>ToolHive Micro-Sandboxing</strong>, and a <strong>$0 Runtime Protocol Tax</strong>.
         </p>
 
         {/* CTAs */}
@@ -127,8 +127,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <ShieldCheck className="w-4 h-4" aria-hidden="true" />
               <span className="text-xs font-bold uppercase tracking-wider">Safety</span>
             </div>
-            <div className="text-2xl font-black text-white">67% BFT</div>
-            <p className="text-xs text-zinc-400 mt-0.5">Byzantine Quorum Agreement</p>
+            <div className="text-2xl font-black text-white">67% Consensus Gate</div>
+            <p className="text-xs text-zinc-400 mt-0.5">Signed by W3C Ed25519 DIDs</p>
           </div>
 
           <div className="hero-metric-card p-4 rounded-2xl bg-[#0D0D11]/90 border border-white/10 backdrop-blur-md text-left">
@@ -136,8 +136,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <Cpu className="w-4 h-4" aria-hidden="true" />
               <span className="text-xs font-bold uppercase tracking-wider">Engine</span>
             </div>
-            <div className="text-2xl font-black text-white">Atlas 2.0</div>
-            <p className="text-xs text-zinc-400 mt-0.5">Goal-Directed DAG Orchestration</p>
+            <div className="text-2xl font-black text-white">Atlas 2.0 Dynamic DAG</div>
+            <p className="text-xs text-zinc-400 mt-0.5">Deterministic rollbacks</p>
           </div>
 
           <div className="hero-metric-card p-4 rounded-2xl bg-[#0D0D11]/90 border border-white/10 backdrop-blur-md text-left">
@@ -145,8 +145,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <Terminal className="w-4 h-4" aria-hidden="true" />
               <span className="text-xs font-bold uppercase tracking-wider">Isolation</span>
             </div>
-            <div className="text-2xl font-black text-white">Zero-Trust</div>
-            <p className="text-xs text-zinc-400 mt-0.5">ToolHive Micro-Sandboxing</p>
+            <div className="text-2xl font-black text-white">ToolHive Micro-Sandboxing</div>
+            <p className="text-xs text-zinc-400 mt-0.5">Process isolation</p>
           </div>
 
           <div className="hero-metric-card p-4 rounded-2xl bg-[#0D0D11]/90 border border-white/10 backdrop-blur-md text-left">
@@ -154,8 +154,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
               <span className="text-xs font-bold uppercase tracking-wider">Economics</span>
             </div>
-            <div className="text-2xl font-black text-white">$0 Tax</div>
-            <p className="text-xs text-zinc-400 mt-0.5">No $2/conv Salesforce Penalty</p>
+            <div className="text-2xl font-black text-white">$0 Runtime Protocol Tax</div>
+            <p className="text-xs text-zinc-400 mt-0.5">Open-source Apache-2</p>
           </div>
         </div>
       </div>

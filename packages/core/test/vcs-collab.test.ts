@@ -296,8 +296,8 @@ describe('VCS Collaboration - JujutsuAdapter (jj CLI)', () => {
     fakeRunner.defaultResponse = { stdout: 'OK', stderr: '', exitCode: 0 };
 
     const adapter = new JujutsuAdapter(fakeRunner.run);
-    await adapter.new_change('feat: autonomous patch');
-    assert.deepEqual(fakeRunner.invocations[0].args, ['new', '-m', 'feat: autonomous patch']);
+    await adapter.new_change('feat: governed patch');
+    assert.deepEqual(fakeRunner.invocations[0].args, ['new', '-m', 'feat: governed patch']);
 
     await adapter.describe('feat: refined patch description');
     assert.deepEqual(fakeRunner.invocations[1].args, ['describe', '-m', 'feat: refined patch description']);
@@ -326,7 +326,7 @@ describe('VCS Collaboration - JujutsuAdapter (jj CLI)', () => {
   it('constructs exact argument vector for log_changes and parses JujutsuChange records', async () => {
     const fakeRunner = new FakeCommandRunner();
     fakeRunner.defaultResponse = {
-      stdout: 'kpqw8910\tz7x8c9v0\ttrue\tfeat: autonomous patch\nx8c9v012\ta1b2c3d4\tfalse\tfix: nil pointer\n',
+      stdout: 'kpqw8910\tz7x8c9v0\ttrue\tfeat: governed patch\nx8c9v012\ta1b2c3d4\tfalse\tfix: nil pointer\n',
       stderr: '',
       exitCode: 0,
     };
@@ -337,7 +337,7 @@ describe('VCS Collaboration - JujutsuAdapter (jj CLI)', () => {
     assert.equal(changes[0].change_id, 'kpqw8910');
     assert.equal(changes[0].commit_id, 'z7x8c9v0');
     assert.equal(changes[0].is_working_copy, true);
-    assert.equal(changes[0].description, 'feat: autonomous patch');
+    assert.equal(changes[0].description, 'feat: governed patch');
     assert.equal(changes[1].change_id, 'x8c9v012');
     assert.equal(changes[1].is_working_copy, false);
     assert.equal(changes[1].description, 'fix: nil pointer');

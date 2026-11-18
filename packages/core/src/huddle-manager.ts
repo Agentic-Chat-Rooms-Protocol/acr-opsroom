@@ -2,7 +2,7 @@
  * ACR OpsRoom - Synthetic Multi-Agent Huddle Manager
  * Evolved beyond Slack AI Huddle notes:
  * While Slack AI merely records human audio meetings,
- * OpsRoom runs autonomous, synthetic multi-agent deliberation huddles,
+ * OpsRoom runs governed, synthetic multi-agent deliberation huddles,
  * resolves cross-specialization conflict, and compiles executive briefs with live canvas sync.
  */
 
@@ -65,7 +65,7 @@ export class HuddleManager {
     const lineCount = huddle.lines.length;
 
     const brief = `**Huddle Summary (${lineCount} turns, participants: ${participantsList}):**\n` +
-      `Autonomous squad evaluated incident telemetry. Consensus achieved on isolated mitigation plan. ` +
+      `Governed squad evaluated incident telemetry. Consensus achieved on isolated mitigation plan. ` +
       `Zero-trust sandbox containment validated; no uncontrolled mutations detected.`;
 
     huddle.executiveBrief = brief;

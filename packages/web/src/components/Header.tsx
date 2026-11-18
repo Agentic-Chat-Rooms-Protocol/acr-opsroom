@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-xs text-zinc-400 hidden sm:block">
-              Autonomous Byzantine War Room &amp; Deliberation Engine
+              Governed Byzantine War Room &amp; Deliberation Engine
             </p>
           </div>
         </div>

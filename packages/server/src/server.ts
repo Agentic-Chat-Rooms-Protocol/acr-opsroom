@@ -1,7 +1,7 @@
 /**
  * ACR OpsRoom - Production-Grade REST & SSE Server
  * Default port: 20447
- * Provides autonomous war room coordination, ML routing, Byzantine consensus,
+ * Provides governed war room coordination, ML routing, Byzantine consensus,
  * and zero-trust sandboxed execution.
  */
 

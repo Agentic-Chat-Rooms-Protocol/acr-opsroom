@@ -116,7 +116,7 @@ export const App: React.FC = () => {
     setIsExecuting(false);
   }, [selectedPreset]);
 
-  // Trigger Autonomous Incident Simulation
+  // Trigger Governed Incident Simulation: 67% Consensus Gate, Atlas 2.0 Dynamic DAG, ToolHive Micro-Sandboxing, $0 Runtime Protocol Tax, WCAG 2.2 AAA COMPLIANT
   const handleTriggerIncident = useCallback(async (customTitle?: string, customDesc?: string) => {
     setIsRunning(true);
     const title = customTitle || selectedPreset.title;
@@ -405,7 +405,7 @@ export const App: React.FC = () => {
       <footer role="contentinfo" className="w-full border-t border-white/10 py-6 px-4 lg:px-8 text-center text-xs text-zinc-400 relative z-10 bg-[#0D0D11]/90">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
-            <span className="font-bold text-zinc-200">ACR OpsRoom</span> · Apache-2.0 License · Agentic Chat Rooms Ecosystem (Repo #21)
+            <span className="font-bold text-zinc-200">ACR OpsRoom</span> · 67% Consensus Gate · Atlas 2.0 Dynamic DAG · ToolHive Micro-Sandboxing · $0 Runtime Protocol Tax · WCAG 2.2 AAA COMPLIANT
           </div>
           <div className="flex items-center gap-4 text-[11px]">
             <a href="https://github.com/Agentic-Chat-Rooms-Protocol/acr-opsroom" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF8C42] transition-colors">GitHub</a>

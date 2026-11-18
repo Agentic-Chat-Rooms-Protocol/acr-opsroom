@@ -14,7 +14,7 @@ import {
 } from '../packages/core/dist/src/index.js';
 
 console.log('======================================================================');
-console.log('       ACR OPSROOM: AUTONOMOUS WAR ROOM & BYZANTINE DELIBERATION      ');
+console.log('       ACR OPSROOM: GOVERNED WAR ROOM & BYZANTINE DELIBERATION      ');
 console.log('======================================================================\n');
 
 // 1. Ingest telemetry & detect anomaly
@@ -115,5 +115,5 @@ console.log(`      -> Merkle Root Hash: ${cert.merkleRootHash}`);
 console.log(`      -> Integrity Status: ${cert.complianceValid ? 'VERIFIED (SOC2 / ISO27001 Valid)' : 'COMPROMISED'}\n`);
 
 console.log('======================================================================');
-console.log('       AUTONOMOUS WAR ROOM RESOLUTION COMPLETE (ZERO DOWNTIME)       ');
+console.log('       GOVERNED WAR ROOM RESOLUTION COMPLETE (ZERO DOWNTIME)       ');
 console.log('======================================================================');

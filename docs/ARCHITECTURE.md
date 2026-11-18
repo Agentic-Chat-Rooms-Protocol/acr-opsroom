@@ -1,11 +1,11 @@
 # Architecture Specification - ACR OpsRoom
 
 ## Executive Summary
-**ACR OpsRoom** is the autonomous operations war room and Byzantine deliberation engine for enterprise AI agents. It represents the architectural evolution beyond Salesforce Agentforce and Slack AI by introducing:
+**ACR OpsRoom** is the governed operations war room and Byzantine deliberation engine for enterprise AI agents. It represents the architectural evolution beyond Salesforce Agentforce and Slack AI by introducing:
 1. **Goal-Directed DAG Planning (Atlas 2.0)** instead of brittle single-agent prompt-chaining.
 2. **Byzantine Fault Tolerant (BFT) Quorum Consensus** ($M$-of-$N$ weighted supermajority with Ed25519 W3C DID signatures) ensuring no rogue or hallucinating agent alters production state without verified peer agreement.
 3. **ToolHive-Inspired Zero-Trust Sandboxing** via `acr-meta-mcp` (process isolation, `no-network`, `egress-allowlist`, and `workspace-scoped` containment).
-4. **Live Dynamic Ops Canvas & Real-Time Huddle Fabric** providing bi-directional telemetry binding, structured action items, execution DAG status, and autonomous multi-agent synthetic huddle summaries.
+4. **Live Dynamic Ops Canvas & Real-Time Huddle Fabric** providing bi-directional telemetry binding, structured action items, execution DAG status, and governed multi-agent synthetic huddle summaries.
 5. **Immutable Merkle Audit Ledger** establishing cryptographic provenance for every prompt, tool invocation, ballot, and execution result.
 
 ---
@@ -59,12 +59,12 @@
 
 ### A. Atlas 2.0 State Machine
 Unlike Salesforce Atlas 1.0 (which relies on single-turn prompt chaining that easily loops or misinterprets customer data), Atlas 2.0 traverses an explicit state machine:
-- **Phase 1: Sensing**: Evaluates real-time telemetry metrics using both parametric (Z-score) and non-parametric (IQR) anomaly bounds.
-- **Phase 2: Grounding**: Ingests ambient context from system logs, git commit diffs, database WAL metrics, and available MCP tools.
-- **Phase 3: Squad Deliberation**: Coordinates a specialized squad of agents (Orchestrator, SRE, SecOps, DataOps, FinOps) that debate root cause hypotheses and propose mitigation tools.
-- **Phase 4: Byzantine Quorum Consensus**: Each agent casts an Ed25519-signed ballot. Requires a 2/3 weighted supermajority to approve execution.
-- **Phase 5: Sandboxed Preflight & Execution**: Simulates preflight dry-runs and executes tools inside isolated micro-containers.
-- **Phase 6: Verification & Projection**: Re-measures telemetry delta post-execution and updates the Live Ops Canvas.
+- **Phase 1: Sensing** - Evaluates real-time telemetry metrics using both parametric (Z-score) and non-parametric (IQR) anomaly bounds.
+- **Phase 2: Grounding** - Ingests ambient context from system logs, git commit diffs, database WAL metrics, and available MCP tools.
+- **Phase 3: Squad Deliberation** - Coordinates a specialized squad of agents (Orchestrator, SRE, SecOps, DataOps, FinOps) that debate root cause hypotheses and propose mitigation tools.
+- **Phase 4: Byzantine Quorum Consensus** - Each agent casts an Ed25519-signed ballot. Requires a 2/3 weighted supermajority to approve execution.
+- **Phase 5: Sandboxed Preflight & Execution** - Simulates preflight dry-runs and executes tools inside isolated micro-containers.
+- **Phase 6: Verification & Projection** - Re-measures telemetry delta post-execution and updates the Live Ops Canvas.
 
 ### B. Byzantine Quorum Consensus
 - Weighted voting: Agents have calibrated vote weights ($w_i$) and confidence scores ($c_i$).

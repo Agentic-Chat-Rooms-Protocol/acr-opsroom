@@ -1,6 +1,6 @@
 # REST & SSE API Reference - ACR OpsRoom
 
-**Default Base URL:** `http://localhost:20447`
+**Default Base URL** - `http://localhost:20447`
 
 ---
 
@@ -9,8 +9,7 @@
 ### `GET /health`
 Returns service status, active incident count, and timestamp.
 
-**Response:**
-```json
+**Response** - ```json
 {
   "status": "online",
   "service": "acr-opsroom",
@@ -41,10 +40,9 @@ Server-Sent Events (SSE) connection streaming real-time operational events.
 ## 3. Incident Management
 
 ### `POST /api/v1/opsroom/incidents/trigger`
-Triggers an autonomous operational incident with ML anomaly routing and optional canonical workflow initialization.
+Triggers an governed operational incident with ML anomaly routing and optional canonical workflow initialization.
 
-**Request Body:**
-```json
+**Request Body** - ```json
 {
   "title": "Postgres Replication Lag Spike",
   "description": "Follower db-replica-03 lagging by 8,420ms",
@@ -69,8 +67,7 @@ Evaluates the Byzantine Quorum (checks for 67% supermajority and flags anomalies
 ### `POST /api/v1/opsroom/incidents/:id/execute`
 Executes the approved plan inside zero-trust ToolHive sandboxes.
 
-**Request Body:**
-```json
+**Request Body** - ```json
 {
   "humanApproved": true
 }

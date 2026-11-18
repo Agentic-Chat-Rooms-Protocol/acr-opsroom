@@ -1,7 +1,7 @@
 {
   "name": "@acr-js/opsroom-workspace",
   "version": "1.0.0",
-  "description": "ACR OpsRoom: Autonomous War Room, Byzantine Deliberation Engine & Supercharged Agentforce Platform",
+  "description": "ACR OpsRoom: Governed War Room, Byzantine Deliberation Engine & Supercharged Agentforce Platform",
   "type": "module",
   "workspaces": [
     "packages/core",

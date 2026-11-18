@@ -11,10 +11,10 @@ Single-agent AI systems (such as Salesforce Agentforce) create severe single poi
 
 Let $\mathcal{A} = \{a_1, a_2, \dots, a_n\}$ be the set of $n$ agents in an operational squad.
 Each agent $a_i$ is parameterized by:
-- **Role**: $\mathcal{R}_i \in \{\text{Atlas}, \text{SRE}, \text{SecOps}, \text{DataOps}, \text{FinOps}\}$
-- **Weight**: $w_i \in \mathbb{R}^+$ where $\sum_{i=1}^n w_i = W_{total}$
-- **Public Key**: $pk_i$ (Ed25519 keypair)
-- **DID**: $\text{did:key:z6Mku}\dots$
+- **Role** - $\mathcal{R}_i \in \{\text{Atlas}, \text{SRE}, \text{SecOps}, \text{DataOps}, \text{FinOps}\}$
+- **Weight** - $w_i \in \mathbb{R}^+$ where $\sum_{i=1}^n w_i = W_{total}$
+- **Public Key** - $pk_i$ (Ed25519 keypair)
+- **DID** - $\text{did:key:z6Mku}\dots$
 
 ### Ballot Structure
 Every ballot $b_i$ submitted by agent $a_i$ contains:
@@ -40,12 +40,12 @@ A plan is approved if and only if:
 ## 2. Byzantine Anomaly Detection Rules
 
 The engine audits all ballots before tallying:
-1. **Cryptographic Signature Verification**:
+1. **Cryptographic Signature Verification**
    $$\text{Verify}_{pk_i}(\text{payload}, \sigma_i) \equiv \text{True}$$
    If verification fails, the ballot is discarded, and $a_i$ is quarantined.
-2. **Confidence Range Boundary**:
+2. **Confidence Range Boundary**
    If $c_i < 0.0$ or $c_i > 1.0$ or $\text{isNaN}(c_i)$, flag as corrupt.
-3. **Justification Completeness**:
+3. **Justification Completeness**
    Empty or whitespace-only justifications are rejected.
 4. **Human-In-The-Loop (HITL) Dual-Consent Trigger**:
    If any critical-tier tool (e.g. database purge, secret revocation, route severance) is included in the execution plan, or if any Byzantine anomaly is flagged, status transitions to `escalated_human`.

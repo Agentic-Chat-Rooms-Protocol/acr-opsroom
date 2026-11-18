@@ -48,7 +48,7 @@ export const DeliberationFeed: React.FC<DeliberationFeedProps> = ({
         {turns.length === 0 ? (
           <div className="text-center py-16 text-zinc-500 text-xs">
             <Cpu className="w-8 h-8 mx-auto mb-2 text-zinc-600 animate-pulse motion-reduce:animate-none" aria-hidden="true" />
-            Awaiting incident trigger. Autonomous squad in standby mode.
+            Awaiting incident trigger. Governed squad in standby mode.
           </div>
         ) : (
           turns.map((turn) => {

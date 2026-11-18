@@ -294,7 +294,7 @@ export class MLIncidentRouter {
     return {
       id: squadId,
       name: squadId.includes('secops') ? 'SecOps & Zero-Trust Defense Squad' : 'Site Reliability & Infrastructure Squad',
-      specialization: 'Mission-Critical Autonomous Operations',
+      specialization: 'Mission-Critical Governed Operations',
       agents,
       consensusThreshold: 0.67, // Byzantine fault tolerance 2/3 threshold
     };

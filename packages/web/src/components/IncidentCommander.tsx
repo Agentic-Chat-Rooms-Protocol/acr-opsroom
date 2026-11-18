@@ -137,7 +137,7 @@ export const IncidentCommander: React.FC<IncidentCommanderProps> = ({
           ) : (
             <>
               <Play className="w-3.5 h-3.5 fill-black" aria-hidden="true" />
-              Trigger Autonomous Deliberation
+              Trigger Governed Deliberation
             </>
           )}
         </button>

@@ -1,5 +1,5 @@
 /**
- * ACR OpsRoom - Autonomous Voice Model, Inference & Hardware-Aware Load Balancer Engine
+ * ACR OpsRoom - Governed Voice Model, Inference & Hardware-Aware Load Balancer Engine
  *
  * Implements a dynamic, browser- and hardware-aware voice orchestration fabric:
  * - Tier 0: Universal Native Web Speech API (0MB download, 0MB RAM, 100% universal fallback)
